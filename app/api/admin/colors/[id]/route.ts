@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 // PUT /api/admin/colors/[id] - Update color
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -21,7 +21,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { name, hexCode, pantoneCode, isActive, sortOrder } = body
 
@@ -78,7 +78,7 @@ export async function PUT(
 // DELETE /api/admin/colors/[id] - Delete color
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -92,7 +92,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Check if color exists
     const existingColor = await prisma.color.findUnique({

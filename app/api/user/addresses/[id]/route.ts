@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 // PUT /api/user/addresses/[id] - Update address
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -92,7 +92,7 @@ export async function PUT(
 // DELETE /api/user/addresses/[id] - Delete address
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication

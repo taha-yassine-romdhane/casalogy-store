@@ -20,13 +20,16 @@ docker-compose up --build -d
 echo "⏳ Waiting for services to be ready..."
 sleep 30
 
-# Run database migrations
-echo "🗄️  Running database migrations..."
-docker-compose exec app npx prisma migrate deploy
-
-# Seed database (optional - uncomment if you want to seed)
-# echo "🌱 Seeding database..."
-# docker-compose exec app npm run seed
+# Initialize database with migrations and data
+echo "🗄️  Initializing database..."
+if [ -f "scripts/init-db.sh" ]; then
+    chmod +x scripts/init-db.sh
+    ./scripts/init-db.sh
+else
+    # Fallback to manual migration
+    docker-compose exec app npx prisma migrate deploy
+    docker-compose exec app npx prisma generate
+fi
 
 # Check service health
 echo "🩺 Checking service health..."
