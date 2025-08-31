@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: casalogy-postgres
-    environment:
-      POSTGRES_DB: casalogy_store
-      POSTGRES_USER: casalogy_user
-      POSTGRES_PASSWORD: casalogy_secure_password_2024
-      POSTGRES_HOST_AUTH_METHOD: trust
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - casalogy-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U casalogy_user -d casalogy_store"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Next.js Application
   app:
     build:
@@ -31,16 +9,17 @@ services:
     container_name: casalogy-app
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://casalogy_user:casalogy_secure_password_2024@postgres:5432/casalogy_store
+      # Connect to PostgreSQL running on the host machine
+      DATABASE_URL: postgresql://postgres:admin@host.docker.internal:5432/casalogy_db
       NEXTAUTH_URL: https://casalogystore.com
       NEXTAUTH_SECRET: your-super-secret-nextauth-key-change-this-in-production
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
       UPLOAD_DIR: /app/public/uploads
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # Allow container to access host PostgreSQL
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - casalogy-network
     volumes:
@@ -70,8 +49,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-    driver: local
   uploads_data:
     driver: local
 
