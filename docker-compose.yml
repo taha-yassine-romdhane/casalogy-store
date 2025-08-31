@@ -9,8 +9,8 @@ services:
     container_name: casalogy-app
     environment:
       NODE_ENV: production
-      # Connect to PostgreSQL running on the host machine
-      DATABASE_URL: postgresql://postgres:admin@host.docker.internal:5432/casalogy_db
+      # Connect to PostgreSQL running on the host machine  
+      DATABASE_URL: postgresql://postgres:admin@172.17.0.1:5432/casalogy_db
       NEXTAUTH_URL: https://casalogystore.com
       NEXTAUTH_SECRET: your-super-secret-nextauth-key-change-this-in-production
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
