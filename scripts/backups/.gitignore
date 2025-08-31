@@ -1,0 +1,7 @@
+# Ignore all backup files for security
+*.sql
+*.dump
+*.backup
+
+# Keep only the .gitkeep file
+!.gitkeep
