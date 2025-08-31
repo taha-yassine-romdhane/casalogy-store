@@ -5,7 +5,7 @@ import { verifyTokenEdge } from '@/lib/auth'
 const prisma = new PrismaClient()
 
 // DELETE /api/admin/categories/[id] - Delete category
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = request.cookies.get('auth-token')?.value
     if (!token) {
@@ -17,7 +17,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     // Check if category exists
     const existingCategory = await prisma.category.findUnique({
