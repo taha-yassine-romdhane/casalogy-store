@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+  
   images: {
     // Allow images from any hostname (useful for uploads and external sources)
     remotePatterns: [
@@ -15,6 +18,10 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         port: '3000',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'casalogystore.com',
       },
       {
         protocol: 'https',

@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: casalogy-postgres
+    environment:
+      POSTGRES_DB: casalogy_store
+      POSTGRES_USER: casalogy_user
+      POSTGRES_PASSWORD: casalogy_secure_password_2024
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - casalogy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casalogy_user -d casalogy_store"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: casalogy-app
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://casalogy_user:casalogy_secure_password_2024@postgres:5432/casalogy_store
+      NEXTAUTH_URL: https://casalogystore.com
+      NEXTAUTH_SECRET: your-super-secret-nextauth-key-change-this-in-production
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      UPLOAD_DIR: /app/public/uploads
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - casalogy-network
+    volumes:
+      - uploads_data:/app/public/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: casalogy-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - uploads_data:/var/www/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - casalogy-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  casalogy-network:
+    driver: bridge
