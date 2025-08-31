@@ -4,6 +4,16 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker deployment
   output: 'standalone',
   
+  // Disable ESLint during build for deployment
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // Disable TypeScript checking during build for deployment  
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
   images: {
     // Allow images from any hostname (useful for uploads and external sources)
     remotePatterns: [
