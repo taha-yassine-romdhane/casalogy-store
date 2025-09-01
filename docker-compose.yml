@@ -23,7 +23,8 @@ services:
     networks:
       - casalogy-network
     volumes:
-      - ./public/uploads:/app/public/uploads
+      # Mount host uploads directory to container
+      - ./public/uploads:/app/public/uploads:rw
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
