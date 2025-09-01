@@ -324,77 +324,86 @@ export default function NewArrivalsPage() {
       </section>
 
       {/* Filters and Sort */}
-      <section className="py-8 bg-white border-b border-gray-200">
+      <section className="py-6 sm:py-8 bg-white border-b border-gray-200">
         <div className="max-w-[1920px] mx-auto px-4 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center">
+          <div className="flex flex-col gap-4">
+            {/* Filters Row */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center flex-shrink-0">
                 <Filter className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="font-medium text-gray-700">Filters:</span>
               </div>
               
-              <select
-                value={filterGender}
-                onChange={(e) => setFilterGender(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-              >
-                <option value="">All Genders</option>
-                {allGenders.map(gender => (
-                  <option key={gender} value={gender}>{gender?.charAt(0).toUpperCase() + gender?.slice(1)}</option>
-                ))}
-              </select>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1">
+                <select
+                  value={filterGender}
+                  onChange={(e) => setFilterGender(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 text-sm"
+                >
+                  <option value="">All Genders</option>
+                  {allGenders.map(gender => (
+                    <option key={gender} value={gender}>{gender?.charAt(0).toUpperCase() + gender?.slice(1)}</option>
+                  ))}
+                </select>
 
-              <select
-                value={filterColor}
-                onChange={(e) => setFilterColor(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-              >
-                <option value="">All Colors</option>
-                {allColors.map(color => (
-                  <option key={color} value={color}>{color}</option>
-                ))}
-              </select>
+                <select
+                  value={filterColor}
+                  onChange={(e) => setFilterColor(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 text-sm"
+                >
+                  <option value="">All Colors</option>
+                  {allColors.map(color => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                </select>
 
-              <select
-                value={filterSize}
-                onChange={(e) => setFilterSize(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-              >
-                <option value="">All Sizes</option>
-                {allSizes.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
+                <select
+                  value={filterSize}
+                  onChange={(e) => setFilterSize(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 text-sm"
+                >
+                  <option value="">All Sizes</option>
+                  {allSizes.map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Sort and View */}
-            <div className="flex items-center gap-4">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600"
-              >
-                <option value="newest">Newest First</option>
-                <option value="featured">Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
+            {/* Sort and View Row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-gray-700 hidden sm:inline">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 text-sm"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="featured">Featured</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+              </div>
 
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-[#282828] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <Grid3X3 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-[#282828] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
+              <div className="flex items-center justify-between sm:justify-end gap-4">
+                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 ${viewMode === 'grid' ? 'bg-[#282828] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                    aria-label="Grid view"
+                  >
+                    <Grid3X3 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 ${viewMode === 'list' ? 'bg-[#282828] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                    aria-label="List view"
+                  >
+                    <List className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -434,10 +443,10 @@ export default function NewArrivalsPage() {
           ) : (
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8' : 'space-y-6'}>
               {filteredProducts.map((product) => (
-              <div key={product.id} className={`bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow ${viewMode === 'list' ? 'flex items-center p-6' : ''}`}>
+              <div key={product.id} className={`bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : ''}`}>
                 {/* Product Image */}
                 <Link href={`/products/${product.slug}`}>
-                  <div className={`bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity relative ${viewMode === 'list' ? 'w-32 h-32 rounded-lg flex-shrink-0' : 'aspect-square'}`}>
+                  <div className={`bg-gray-100 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity relative ${viewMode === 'list' ? 'w-20 h-20 rounded-lg flex-shrink-0' : 'aspect-square'}`}>
                     {product.mainImage ? (
                       <Image 
                         src={product.mainImage} 
@@ -449,24 +458,24 @@ export default function NewArrivalsPage() {
                         loading="lazy"
                       />
                     ) : (
-                      <Shirt className={`text-gray-400 ${viewMode === 'list' ? 'w-12 h-12' : 'w-16 h-16'}`} />
+                      <Shirt className={`text-gray-400 ${viewMode === 'list' ? 'w-8 h-8' : 'w-16 h-16'}`} />
                     )}
                   </div>
                 </Link>
 
-                <div className={`p-6 flex-1 ${viewMode === 'list' ? 'ml-6' : ''}`}>
+                <div className={`flex-1 min-w-0 ${viewMode === 'list' ? '' : 'p-6'}`}>
                   {/* Badges */}
-                  <div className="flex gap-2 mb-3">
-                    <span className="bg-gradient-to-r from-green-100 to-blue-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  <div className={`flex gap-1 ${viewMode === 'list' ? 'mb-1' : 'mb-3'}`}>
+                    <span className={`bg-gradient-to-r from-green-100 to-blue-100 text-green-800 font-medium px-2 py-1 rounded-full ${viewMode === 'list' ? 'text-xs' : 'text-xs'}`}>
                       ✨ New Arrival
                     </span>
                     {product.category && (
-                      <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">
+                      <span className={`bg-gray-100 text-gray-800 font-medium px-2 py-1 rounded-full ${viewMode === 'list' ? 'text-xs' : 'text-xs'}`}>
                         {product.category.name}
                       </span>
                     )}
                     {product.isOnSale && (
-                      <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                      <span className={`bg-red-100 text-red-800 font-medium px-2 py-1 rounded-full ${viewMode === 'list' ? 'text-xs' : 'text-xs'}`}>
                         Sale
                       </span>
                     )}
@@ -474,7 +483,7 @@ export default function NewArrivalsPage() {
 
                   {/* Product Info */}
                   <Link href={`/products/${product.slug}`}>
-                    <h3 className="font-bold text-[#282828] mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">{product.name}</h3>
+                    <h3 className={`font-bold text-[#282828] hover:text-blue-600 transition-colors cursor-pointer ${viewMode === 'list' ? 'text-sm mb-1 line-clamp-1' : 'mb-2 line-clamp-1'}`}>{product.name}</h3>
                   </Link>
                   
                   {/* Rating */}
@@ -490,14 +499,14 @@ export default function NewArrivalsPage() {
                     </span>
                   </div>
 
-                  {/* Colors */}
-                  <div className="flex items-center gap-2 mb-3">
+                  {/* Colors - Hidden in list view on mobile */}
+                  <div className={`items-center gap-2 ${viewMode === 'list' ? 'hidden sm:flex mb-2' : 'flex mb-3'}`}>
                     <span className="text-sm text-gray-600">Colors:</span>
                     <div className="flex gap-1">
-                      {product.colors.slice(0, 4).map((color, index) => (
+                      {product.colors.slice(0, viewMode === 'list' ? 3 : 4).map((color, index) => (
                         <div
                           key={index}
-                          className="w-4 h-4 rounded-full border border-gray-300"
+                          className={`rounded-full border border-gray-300 ${viewMode === 'list' ? 'w-3 h-3' : 'w-4 h-4'}`}
                           style={{
                             backgroundColor: color === 'White' ? '#fff' : 
                                            color === 'Black' ? '#000' :
@@ -522,19 +531,37 @@ export default function NewArrivalsPage() {
                           }}
                         />
                       ))}
-                      {product.colors.length > 4 && (
-                        <span className="text-xs text-gray-500">+{product.colors.length - 4}</span>
+                      {product.colors.length > (viewMode === 'list' ? 3 : 4) && (
+                        <span className="text-xs text-gray-500">+{product.colors.length - (viewMode === 'list' ? 3 : 4)}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Sizes */}
-                  {product.sizes.length > 0 && (
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-sm text-gray-600">Sizes:</span>
-                      <span className="text-sm text-gray-800">{product.sizes.join(', ')}</span>
-                    </div>
-                  )}
+                  <div className={`${viewMode === 'list' ? 'hidden sm:flex items-center gap-2 mb-2' : 'mb-3'}`}>
+                    {viewMode === 'list' ? (
+                      <>
+                        <span className="text-sm text-gray-600">Sizes:</span>
+                        <span className="text-sm text-gray-800">{product.sizes.slice(0, 3).join(', ')}{product.sizes.length > 3 && '...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-sm text-gray-600 mb-2 block">Available Sizes:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {product.sizes.slice(0, 6).map((size, index) => (
+                            <span key={index} className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded-full border">
+                              {size}
+                            </span>
+                          ))}
+                          {product.sizes.length > 6 && (
+                            <span className="bg-gray-100 text-gray-500 text-xs font-medium px-2 py-1 rounded-full border">
+                              +{product.sizes.length - 6}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
 
                   {/* Price and Actions */}
                   <div className={`flex items-center ${viewMode === 'list' ? 'justify-between' : 'justify-between'}`}>
@@ -546,13 +573,19 @@ export default function NewArrivalsPage() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <Heart className="w-5 h-5 text-gray-600" />
+                      <button className={`border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${
+                        viewMode === 'list' ? 'p-1.5' : 'p-2'
+                      }`}>
+                        <Heart className={`transition-colors text-gray-600 ${
+                          viewMode === 'list' ? 'w-4 h-4' : 'w-5 h-5'
+                        }`} />
                       </button>
                       <Link href={`/products/${product.slug}`}>
-                        <button className="px-4 py-2 bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2">
-                          <ShoppingCart className="w-4 h-4" />
-                          View Details
+                        <button className={`bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 ${
+                          viewMode === 'list' ? 'px-3 py-1.5 text-sm' : 'px-3 py-2 text-sm'
+                        }`}>
+                          <ShoppingCart className={viewMode === 'list' ? 'w-3 h-3' : 'w-4 h-4'} />
+                          <span className="whitespace-nowrap">{viewMode === 'list' ? 'View' : 'View'}</span>
                         </button>
                       </Link>
                     </div>

@@ -244,62 +244,75 @@ export default function HijebiScrubsPage() {
       <section id="products" className="py-8">
         <div className="max-w-[1920px] mx-auto px-4 lg:px-8">
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-                {(selectedSizes.length > 0 || selectedColors.length > 0) && (
-                  <span className="bg-[#282828] text-white text-xs px-2 py-0.5 rounded-full">
-                    {selectedSizes.length + selectedColors.length}
-                  </span>
-                )}
-              </button>
-              
-              {(selectedSizes.length > 0 || selectedColors.length > 0) && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-gray-600 hover:text-[#282828]"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#282828] text-white' : 'text-gray-600'}`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#282828] text-white' : 'text-gray-600'}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
+          <div className="py-6 sm:py-8">
+            <div className="flex flex-col gap-4">
+              {/* Filters Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center flex-shrink-0">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filters
+                    {(selectedSizes.length > 0 || selectedColors.length > 0) && (
+                      <span className="bg-[#282828] text-white text-xs px-2 py-0.5 rounded-full">
+                        {selectedSizes.length + selectedColors.length}
+                      </span>
+                    )}
+                  </button>
+                  
+                  {(selectedSizes.length > 0 || selectedColors.length > 0) && (
+                    <button
+                      onClick={clearFilters}
+                      className="text-sm text-gray-600 hover:text-[#282828] ml-4"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#282828]"
-              >
-                {sortOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {/* Sort and View Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-gray-700 hidden sm:inline">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#282828] text-sm"
+                  >
+                    {sortOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <span className="text-sm text-gray-600">
-                {filteredProducts.length} Products
-              </span>
+                <div className="flex items-center justify-between sm:justify-end gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded ${viewMode === 'grid' ? 'bg-[#282828] text-white' : 'text-gray-600'}`}
+                      aria-label="Grid view"
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded ${viewMode === 'list' ? 'bg-[#282828] text-white' : 'text-gray-600'}`}
+                      aria-label="List view"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <span className="text-sm text-gray-600">
+                    {filteredProducts.length} Products
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -394,15 +407,15 @@ export default function HijebiScrubsPage() {
             </div>
           ) : (
             <div className={viewMode === 'grid' 
-              ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-              : "space-y-4"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+              : "space-y-6"
             }>
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
                   className={viewMode === 'grid'
-                    ? "bg-white rounded-lg overflow-hidden group hover:shadow-lg transition-shadow"
-                    : "bg-white rounded-lg overflow-hidden flex gap-4 p-4 hover:shadow-lg transition-shadow"
+                    ? "bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                    : "bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex items-center p-3 gap-3"
                   }
                 >
                   {viewMode === 'grid' ? (
@@ -424,35 +437,55 @@ export default function HijebiScrubsPage() {
                           )}
                         </div>
                       </Link>
-                      <div className="p-4">
+                      <div className="p-6">
                         <Link href={`/products/${product.slug}`}>
-                          <h3 className="font-medium text-[#282828] mb-2 hover:opacity-70">
+                          <h3 className="font-bold text-[#282828] mb-2 line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer">
                             {product.name}
                           </h3>
                         </Link>
                         
                         {/* Colors */}
-                        <div className="flex gap-1 mb-2">
-                          {product.colors.slice(0, 5).map((color, index) => (
-                            <span
-                              key={index}
-                              className="w-5 h-5 rounded-full border border-gray-300"
-                              style={{ backgroundColor: color.code }}
-                              title={color.name}
-                            />
-                          ))}
-                          {product.colors.length > 5 && (
-                            <span className="text-xs text-gray-500">+{product.colors.length - 5}</span>
-                          )}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm text-gray-600">Colors:</span>
+                          <div className="flex gap-1">
+                            {product.colors.slice(0, 4).map((color, index) => (
+                              <div
+                                key={index}
+                                className="w-4 h-4 rounded-full border border-gray-300"
+                                style={{ backgroundColor: color.code }}
+                                title={color.name}
+                              />
+                            ))}
+                            {product.colors.length > 4 && (
+                              <span className="text-xs text-gray-500">+{product.colors.length - 4}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Sizes */}
+                        <div className="mb-3">
+                          <span className="text-sm text-gray-600 mb-2 block">Available Sizes:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {product.sizes.slice(0, 6).map((size, index) => (
+                              <span key={index} className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded-full border">
+                                {size}
+                              </span>
+                            ))}
+                            {product.sizes.length > 6 && (
+                              <span className="bg-gray-100 text-gray-500 text-xs font-medium px-2 py-1 rounded-full border">
+                                +{product.sizes.length - 6}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Price */}
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="font-bold text-lg text-[#282828]">
+                          <span className="text-xl font-bold text-[#282828]">
                             {product.price} TND
                           </span>
                           {product.comparePrice && (
-                            <span className="text-sm text-gray-500 line-through">
+                            <span className="text-sm text-gray-500 line-through ml-2">
                               {product.comparePrice} TND
                             </span>
                           )}
@@ -479,106 +512,79 @@ export default function HijebiScrubsPage() {
                           </div>
                         )}
 
-                        <button
-                          onClick={() => {
-                            // Add first variant to cart
-                            if (product.sizes.length > 0 && product.colors.length > 0) {
-                              addToCart({
-                                productId: product.id,
-                                name: product.name,
-                                price: product.price,
-                                image: product.images[0]?.url || '',
-                                size: product.sizes[0],
-                                color: product.colors[0].name,
-                                quantity: 1
-                              })
-                            }
-                          }}
-                          className="w-full py-2 bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          Quick Add
-                        </button>
+                        <Link href={`/products/${product.slug}`}>
+                          <button className="w-full px-3 py-2 text-sm bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                            <ShoppingBag className="w-4 h-4" />
+                            <span className="whitespace-nowrap">View</span>
+                          </button>
+                        </Link>
                       </div>
                     </>
                   ) : (
                     <>
                       {/* List View */}
-                      <Link href={`/products/${product.slug}`} className="w-48 h-48 bg-gray-100 relative flex-shrink-0">
+                      <Link href={`/products/${product.slug}`} className="w-20 h-20 bg-gray-100 relative flex-shrink-0 rounded-lg">
                         {product.images[0] && (
                           <Image
                             src={product.images[0].url}
                             alt={product.images[0].altText || product.name}
                             fill
-                            className="object-cover"
+                            className="object-cover rounded-lg"
                           />
                         )}
                       </Link>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <Link href={`/products/${product.slug}`}>
-                          <h3 className="text-lg font-medium text-[#282828] mb-2 hover:opacity-70">
+                          <h3 className="text-sm mb-1 line-clamp-1 font-bold text-[#282828] hover:text-blue-600 transition-colors cursor-pointer">
                             {product.name}
                           </h3>
                         </Link>
-                        <p className="text-gray-600 mb-3">{product.description}</p>
                         
-                        <div className="flex items-center gap-4 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xl text-[#282828]">
+                        {/* Colors - Hidden on mobile */}
+                        <div className="hidden sm:flex items-center gap-2 mb-2">
+                          <span className="text-sm text-gray-600">Colors:</span>
+                          <div className="flex gap-1">
+                            {product.colors.slice(0, 3).map((color, index) => (
+                              <div
+                                key={index}
+                                className="w-3 h-3 rounded-full border border-gray-300"
+                                style={{ backgroundColor: color.code }}
+                                title={color.name}
+                              />
+                            ))}
+                            {product.colors.length > 3 && (
+                              <span className="text-xs text-gray-500">+{product.colors.length - 3}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Sizes - Hidden on mobile */}
+                        <div className="hidden sm:flex items-center gap-2 mb-2">
+                          <span className="text-sm text-gray-600">Sizes:</span>
+                          <span className="text-sm text-gray-800">{product.sizes.slice(0, 3).join(', ')}{product.sizes.length > 3 && '...'}</span>
+                        </div>
+                        
+                        {/* Price and Actions */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xl font-bold text-[#282828]">
                               {product.price} TND
                             </span>
                             {product.comparePrice && (
-                              <span className="text-gray-500 line-through">
+                              <span className="text-sm text-gray-500 line-through ml-2">
                                 {product.comparePrice} TND
                               </span>
                             )}
                           </div>
                           
-                          {product.rating && (
-                            <div className="flex items-center gap-1">
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${
-                                      i < Math.floor(product.rating!) 
-                                        ? 'text-yellow-400 fill-current' 
-                                        : 'text-gray-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-sm text-gray-600">
-                                ({product.reviewCount || 0} reviews)
-                              </span>
-                            </div>
-                          )}
+                          <Link
+                            href={`/products/${product.slug}`}
+                            className="px-3 py-1.5 text-sm bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                          >
+                            <ShoppingBag className="w-3 h-3" />
+                            <span className="whitespace-nowrap">View</span>
+                          </Link>
                         </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="flex gap-1">
-                            {product.colors.map((color, index) => (
-                              <span
-                                key={index}
-                                className="w-6 h-6 rounded-full border border-gray-300"
-                                style={{ backgroundColor: color.code }}
-                                title={color.name}
-                              />
-                            ))}
-                          </div>
-                          
-                          <div className="text-sm text-gray-600">
-                            Sizes: {product.sizes.join(', ')}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col justify-center">
-                        <Link
-                          href={`/products/${product.slug}`}
-                          className="px-6 py-2 bg-[#282828] text-white rounded-lg hover:bg-gray-800 transition-colors text-center"
-                        >
-                          View Details
-                        </Link>
                       </div>
                     </>
                   )}
