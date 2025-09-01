@@ -233,16 +233,26 @@ export async function POST(request: NextRequest) {
         )
         
         if (colorVariants.length > 0) {
-          await prisma.productVariant.createMany({
-            data: colorVariants.map((variant: any) => ({
+          // Generate unique SKUs for each variant
+          const variantsWithSku = colorVariants.map((variant: any, index: number) => {
+            // Generate unique SKU: ProductSKU-ColorCode-Timestamp-Index
+            const timestamp = Date.now()
+            const colorCode = color.colorName.substring(0, 2).toUpperCase()
+            const uniqueSku = `${finalSku}-${colorCode}-${timestamp}-${index}`
+            
+            return {
               productId: product.id,
               colorId: color.id,
               sizeId: variant.sizeId,
-              sku: variant.sku,
+              sku: uniqueSku,
               quantity: parseInt(variant.quantity) || 0,
               price: variant.price ? parseFloat(variant.price) : null,
               barcode: variant.barcode || null
-            }))
+            }
+          })
+          
+          await prisma.productVariant.createMany({
+            data: variantsWithSku
           })
         }
       }

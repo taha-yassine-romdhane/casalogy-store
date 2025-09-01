@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { Plus, X, Upload, Palette, Ruler, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, X, Upload, Palette, Ruler, Trash2, Eye } from 'lucide-react'
 
 interface Color {
   id: string
@@ -53,6 +53,57 @@ export function ProfessionalProductForm({
   const [productSizes, setProductSizes] = useState<Size[]>([])
   const [productVariants, setProductVariants] = useState<ProductVariant[]>([])
   const [dragOverColorId, setDragOverColorId] = useState<string | null>(null)
+  const [skuPreview, setSkuPreview] = useState<string>('')
+  const [showSkuPreview, setShowSkuPreview] = useState<boolean>(false)
+
+  // SKU generation function (matches backend logic)
+  const generateSkuPreview = (productName: string, categoryId: string) => {
+    if (!productName || !categoryId) return ''
+    
+    const timestamp = Date.now().toString(36).toUpperCase()
+    const category = categories.find(c => c.id === categoryId)
+    const categoryPrefix = category?.name.substring(0, 3).toUpperCase() || 'PRD'
+    return `${categoryPrefix}-${timestamp}`
+  }
+
+  // Generate variant SKU preview
+  const generateVariantSkuPreview = (baseSku: string, colorName: string, index: number) => {
+    if (!baseSku || !colorName) return ''
+    const timestamp = Date.now()
+    const colorCode = colorName.substring(0, 2).toUpperCase()
+    return `${baseSku}-${colorCode}-${timestamp}-${index}`
+  }
+
+  // Update SKU preview when form changes
+  useEffect(() => {
+    const handleFormChange = () => {
+      const nameInput = document.querySelector('[name="name"]') as HTMLInputElement
+      const categorySelect = document.querySelector('[name="categoryId"]') as HTMLSelectElement
+      
+      if (nameInput?.value && categorySelect?.value) {
+        const preview = generateSkuPreview(nameInput.value, categorySelect.value)
+        setSkuPreview(preview)
+      } else {
+        setSkuPreview('')
+      }
+    }
+
+    // Add event listeners to form fields
+    const nameInput = document.querySelector('[name="name"]') as HTMLInputElement
+    const categorySelect = document.querySelector('[name="categoryId"]') as HTMLSelectElement
+    
+    if (nameInput) nameInput.addEventListener('input', handleFormChange)
+    if (categorySelect) categorySelect.addEventListener('change', handleFormChange)
+    
+    // Initial preview
+    handleFormChange()
+
+    // Cleanup
+    return () => {
+      if (nameInput) nameInput.removeEventListener('input', handleFormChange)
+      if (categorySelect) categorySelect.removeEventListener('change', handleFormChange)
+    }
+  }, [categories])
 
   // Color management
   const addProductColor = (color: Color) => {
@@ -120,7 +171,7 @@ export function ProfessionalProductForm({
           sizeId: size.id,
           price: basePrice,
           quantity: 0,
-          sku: `${(document.querySelector('[name="sku"]') as HTMLInputElement)?.value || ''}-${colorId}-${size.id}`
+          sku: '' // Will be auto-generated on backend
         }
         setProductVariants(prev => [...prev, newVariant])
       }
@@ -136,7 +187,7 @@ export function ProfessionalProductForm({
           sizeId,
           price: basePrice,
           quantity: 0,
-          sku: `${(document.querySelector('[name="sku"]') as HTMLInputElement)?.value || ''}-${color.id}-${sizeId}`
+          sku: '' // Will be auto-generated on backend
         }
         setProductVariants(prev => [...prev, newVariant])
       }
@@ -251,17 +302,52 @@ export function ProfessionalProductForm({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-2">
-                Base SKU *
+              <label className="block text-sm font-medium text-gray-800 mb-2 flex items-center gap-2">
+                Base SKU 
+                <span className="text-xs text-gray-500">(optional - will be auto-generated)</span>
+                {skuPreview && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSkuPreview(!showSkuPreview)}
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Preview
+                  </button>
+                )}
               </label>
               <input
                 type="text"
                 name="sku"
-                required
                 defaultValue={initialData?.sku}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter base SKU"
+                placeholder="Leave empty for auto-generation"
               />
+              {showSkuPreview && skuPreview && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm text-blue-800">
+                    <strong>Generated SKU Preview:</strong> {skuPreview}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Variant SKUs will be: {skuPreview}-[COLOR]-[TIMESTAMP]-[INDEX]
+                  </div>
+                  {productColors.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <div className="text-xs font-medium text-blue-700">Example variant SKUs:</div>
+                      {productColors.slice(0, 2).map((color, index) => (
+                        <div key={color.id} className="text-xs text-blue-600 font-mono">
+                          • {generateVariantSkuPreview(skuPreview, color.name, index)}
+                        </div>
+                      ))}
+                      {productColors.length > 2 && (
+                        <div className="text-xs text-blue-500">
+                          ... and {productColors.length - 2} more variants
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-2">
@@ -532,7 +618,7 @@ export function ProfessionalProductForm({
                     <th className="text-left py-3 px-4 font-medium text-gray-800">Size</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-800">Price (TND)</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-800">Quantity</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-800">SKU</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-800">SKU Preview</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -573,13 +659,9 @@ export function ProfessionalProductForm({
                             />
                           </td>
                           <td className="py-3 px-4">
-                            <input
-                              type="text"
-                              value={variant?.sku || ''}
-                              onChange={(e) => updateVariant(color.id, size.id, 'sku', e.target.value)}
-                              className="w-32 px-2 py-1 border border-gray-300 rounded text-sm"
-                              placeholder="SKU"
-                            />
+                            <div className="text-xs font-mono text-gray-600 max-w-32 truncate" title={skuPreview ? generateVariantSkuPreview(skuPreview, color.name, productColors.indexOf(color)) : 'Fill name & category'}>
+                              {skuPreview ? generateVariantSkuPreview(skuPreview, color.name, productColors.indexOf(color)) : '(auto-generated)'}
+                            </div>
                           </td>
                         </tr>
                       )
