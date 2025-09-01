@@ -56,6 +56,9 @@ export function GuestNavbar() {
                 <Link href="/men" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
                   MEN
                 </Link>
+                <Link href="/hijebi-scrubs" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
+                  HIJEBI
+                </Link>
                 <Link href="/new-arrivals" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
                   NEW
                 </Link>
@@ -179,6 +182,7 @@ export function GuestNavbar() {
                 <Link href="/underscrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Underscrubs</Link>
                 <Link href="/outerwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Outerwear</Link>
                 <Link href="/footwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Footwear</Link>
+                <Link href="/hijebi-scrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Hijebi Scrubs</Link>
                 <Link href="/accessories" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Accessories</Link>
                 <Link href="/size-guide" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Size Guide</Link>
               </div>

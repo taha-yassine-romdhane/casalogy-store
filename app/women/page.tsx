@@ -147,8 +147,83 @@ export default function WomenPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative">
+      {/* Mobile Only Hero Section */}
+      <section className="md:hidden relative">
+        <div className="relative">
+          {heroData && heroData.mediaType === 'image' ? (
+            (() => {
+              const images = heroData.mediaUrls && heroData.mediaUrls.length > 0 ? heroData.mediaUrls : [heroData.mediaUrl].filter(Boolean)
+              
+              if (images.length > 0) {
+                return images.map((image: string, index: number) => (
+                  <div
+                    key={index}
+                    className={`relative ${
+                      index === currentImageIndex ? 'block' : 'hidden'
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt={`Women's medical wear hero image ${index + 1}`}
+                      width={1920}
+                      height={1080}
+                      className="w-full h-auto object-contain"
+                      sizes="100vw"
+                      quality={95}
+                      priority={index === 0}
+                    />
+                    {/* Mobile Shop Now Button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Link
+                        href="#products"
+                        className="px-6 py-2.5 bg-[#282828] text-white font-medium text-sm hover:bg-gray-800 transition-colors shadow-lg rounded"
+                      >
+                        SHOP NOW
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              }
+              return null
+            })()
+          ) : (
+            <div className="aspect-video bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+              <Link
+                href="#products"
+                className="px-6 py-2.5 bg-[#282828] text-white font-medium text-sm hover:bg-gray-800 transition-colors shadow-lg rounded"
+              >
+                SHOP NOW
+              </Link>
+            </div>
+          )}
+          
+          {/* Mobile Carousel Indicators */}
+          {heroData && heroData.mediaType === 'image' && (() => {
+            const images = heroData.mediaUrls && heroData.mediaUrls.length > 0 ? heroData.mediaUrls : [heroData.mediaUrl].filter(Boolean)
+            const hasMultipleImages = images.length > 1
+            
+            return hasMultipleImages ? (
+              <div className="flex justify-center gap-2 py-3 bg-white">
+                {images.map((_: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex 
+                        ? 'bg-black w-8' 
+                        : 'bg-black/40 hover:bg-black/60'
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            ) : null
+          })()}
+        </div>
+      </section>
+
+      {/* Desktop Only Hero Section */}
+      <section className="hidden md:block relative">
         <div className="relative h-[600px] lg:h-[700px] bg-gray-100 overflow-hidden">
           {/* Background Images */}
           {heroData && heroData.mediaType === 'image' ? (

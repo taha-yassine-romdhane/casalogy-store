@@ -97,6 +97,9 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
                 <Link href="/men" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
                   MEN
                 </Link>
+                <Link href="/hijebi-scrubs" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
+                  HIJEBI
+                </Link>
                 <Link href="/new-arrivals" className="text-[#282828] font-medium hover:opacity-70 transition-opacity">
                   NEW
                 </Link>
@@ -305,6 +308,9 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
               </Link>
               <Link href="/footwear" className="flex items-center py-2 text-[#282828]" onClick={handleLinkClick}>
                 Footwear
+              </Link>
+              <Link href="/hijebi-scrubs" className="flex items-center py-2 text-[#282828]" onClick={handleLinkClick}>
+                Hijebi Scrubs
               </Link>
               <Link href="/accessories" className="flex items-center py-2 text-[#282828]" onClick={handleLinkClick}>
                 Accessories
