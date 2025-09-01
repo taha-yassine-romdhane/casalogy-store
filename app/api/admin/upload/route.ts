@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+    // Use environment variable or fallback to default
+    const uploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
