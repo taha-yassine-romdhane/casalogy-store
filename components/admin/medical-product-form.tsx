@@ -227,7 +227,7 @@ export function MedicalProductForm({
           return {
             sizeId: size.id,
             sizeName: size.name,
-            quantity: existingSize?.quantity ?? 10, // Default to 10 if no existing quantity
+            quantity: existingSize?.quantity ?? 0, // Default to 0 if no existing quantity
             sku: existingSize?.sku || ''
           }
         })
@@ -305,7 +305,7 @@ export function MedicalProductForm({
       const newInventory: SizeInventory[] = sizes.map(size => ({
         sizeId: size.id,
         sizeName: size.name,
-        quantity: 10, // Default quantity set to 10
+        quantity: 0, // Default quantity set to 0
         sku: ''
       }))
       setSizeInventory(prev => ({

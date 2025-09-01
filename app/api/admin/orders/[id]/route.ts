@@ -10,6 +10,91 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json()
     const { status, paymentStatus } = body
 
+    // Get current order to check status change
+    const currentOrder = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            variant: true
+          }
+        }
+      }
+    })
+
+    if (!currentOrder) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if order is being confirmed (status changes from PENDING to CONFIRMED)
+    const isBeingConfirmed = currentOrder.status === 'PENDING' && status === 'CONFIRMED'
+    
+    // Check if confirmed order is being cancelled (status changes from CONFIRMED to CANCELLED)
+    const isBeingCancelled = currentOrder.status === 'CONFIRMED' && status === 'CANCELLED'
+
+    // If order is being confirmed, decrement stock quantities
+    if (isBeingConfirmed) {
+      console.log(`Order ${id} is being confirmed, decrementing stock...`)
+      
+      for (const item of currentOrder.items) {
+        if (item.variantId) {
+          const variant = await prisma.productVariant.findUnique({
+            where: { id: item.variantId }
+          })
+          
+          if (variant) {
+            // Check if there's enough stock
+            if (variant.quantity < item.quantity) {
+              return NextResponse.json(
+                { 
+                  error: `Insufficient stock for product variant. Available: ${variant.quantity}, Required: ${item.quantity}`,
+                  productId: item.productId,
+                  variantId: item.variantId
+                },
+                { status: 400 }
+              )
+            }
+            
+            // Decrement stock
+            await prisma.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                quantity: {
+                  decrement: item.quantity
+                }
+              }
+            })
+            
+            console.log(`Decremented stock for variant ${item.variantId}: -${item.quantity}`)
+          }
+        }
+      }
+    }
+    
+    // If confirmed order is being cancelled, restore stock quantities
+    if (isBeingCancelled) {
+      console.log(`Order ${id} is being cancelled, restoring stock...`)
+      
+      for (const item of currentOrder.items) {
+        if (item.variantId) {
+          // Increment stock back
+          await prisma.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              quantity: {
+                increment: item.quantity
+              }
+            }
+          })
+          
+          console.log(`Restored stock for variant ${item.variantId}: +${item.quantity}`)
+        }
+      }
+    }
+
     // Update order status
     const updatedOrder = await prisma.order.update({
       where: { id },
