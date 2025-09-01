@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         role: data.role,
         content: data.content,
         rating: data.rating || 5,
-        imageUrl: data.imageUrl,
+        socialMediaSource: data.socialMediaSource,
         isActive: true,
         sortOrder: data.sortOrder || 0
       }
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
         role: data.role,
         content: data.content,
         rating: data.rating,
-        imageUrl: data.imageUrl,
+        socialMediaSource: data.socialMediaSource,
         isActive: data.isActive,
         sortOrder: data.sortOrder
       }

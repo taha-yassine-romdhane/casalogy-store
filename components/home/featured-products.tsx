@@ -221,15 +221,6 @@ export function FeaturedProducts() {
             )
           })}
         </div>
-
-        <div className="text-center mt-12">
-          <Link
-            href="/shop"
-            className="inline-block px-8 py-4 bg-[#282828] text-white font-medium hover:bg-gray-800 transition-colors"
-          >
-            VIEW ALL PRODUCTS
-          </Link>
-        </div>
       </div>
     </section>
   )

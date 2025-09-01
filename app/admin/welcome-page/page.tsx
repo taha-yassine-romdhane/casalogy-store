@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { Save, Upload, Eye, Edit, Trash2, Plus, Image, Type, Sparkles, Package, MessageCircle, Star, Play, Video, Monitor, Loader2, Settings, Users, Mail, Award, X } from 'lucide-react'
+import { Save, Upload, Eye, Edit, Trash2, Plus, Image, Type, Sparkles, Package, MessageCircle, Star, Play, Video, Monitor, Loader2, Settings, Users, Mail, Award, X, Facebook, Instagram, MessageSquare, Phone } from 'lucide-react'
 import FeaturedCategories from '../components/FeaturedCategories'
 import FeaturedProducts from '../components/FeaturedProducts'
 
@@ -40,7 +40,7 @@ interface Testimonial {
   role: string
   content: string
   rating: number
-  imageUrl?: string
+  socialMediaSource?: string
   isActive: boolean
   sortOrder: number
 }
@@ -292,12 +292,257 @@ function MultiImageUploader({
   )
 }
 
+// Social Media Icons Component
+function SocialMediaIcon({ platform }: { platform: string }) {
+  switch (platform) {
+    case 'facebook':
+      return <Facebook className="w-5 h-5 text-blue-600" />
+    case 'instagram':
+      return <Instagram className="w-5 h-5 text-pink-600" />
+    case 'messenger':
+      return <MessageSquare className="w-5 h-5 text-blue-500" />
+    case 'whatsapp':
+      return <Phone className="w-5 h-5 text-green-600" />
+    case 'tiktok':
+      return <Play className="w-5 h-5 text-black" />
+    default:
+      return <MessageCircle className="w-5 h-5 text-gray-600" />
+  }
+}
+
+// Testimonials Section Component
+function TestimonialsSection({ testimonials, onRefresh, onSave, onDelete, saving }: {
+  testimonials: Testimonial[]
+  onRefresh: () => void
+  onSave: (data: Testimonial) => void
+  onDelete: (id: string) => void
+  saving: boolean
+}) {
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  const socialMediaOptions = [
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'messenger', label: 'Messenger' },
+    { value: 'whatsapp', label: 'WhatsApp' },
+    { value: 'tiktok', label: 'TikTok' }
+  ]
+
+  const handleSave = async (testimonial: Testimonial) => {
+    onSave(testimonial)
+    setEditingTestimonial(null)
+    setShowAddForm(false)
+  }
+
+  const startEdit = (testimonial: Testimonial) => {
+    setEditingTestimonial(testimonial)
+    setShowAddForm(false)
+  }
+
+  const startAdd = () => {
+    setEditingTestimonial({
+      name: '',
+      role: '',
+      content: '',
+      rating: 5,
+      socialMediaSource: '',
+      isActive: true,
+      sortOrder: testimonials.length
+    })
+    setShowAddForm(true)
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">Customer Testimonials</h2>
+        <button 
+          onClick={startAdd}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Testimonial
+        </button>
+      </div>
+
+      {(showAddForm || editingTestimonial) && (
+        <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">
+            {showAddForm ? 'Add New Testimonial' : 'Edit Testimonial'}
+          </h3>
+          <TestimonialForm
+            testimonial={editingTestimonial!}
+            onSave={handleSave}
+            onCancel={() => {
+              setEditingTestimonial(null)
+              setShowAddForm(false)
+            }}
+            socialMediaOptions={socialMediaOptions}
+            saving={saving}
+          />
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {testimonials.map((testimonial) => (
+          <div key={testimonial.id} className="border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div>
+                  <h3 className="font-medium text-gray-800">{testimonial.name}</h3>
+                  <p className="text-sm text-gray-700">{testimonial.role}</p>
+                </div>
+                {testimonial.socialMediaSource && (
+                  <SocialMediaIcon platform={testimonial.socialMediaSource} />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => startEdit(testimonial)}
+                  className="p-2 text-gray-700 hover:text-blue-600"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => testimonial.id && onDelete(testimonial.id)}
+                  className="p-2 text-gray-700 hover:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <p className="text-gray-800 mb-3">"{testimonial.content}"</p>
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {testimonials.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>No testimonials yet. Add your first testimonial!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Testimonial Form Component
+function TestimonialForm({ testimonial, onSave, onCancel, socialMediaOptions, saving }: {
+  testimonial: Testimonial
+  onSave: (testimonial: Testimonial) => void
+  onCancel: () => void
+  socialMediaOptions: { value: string; label: string }[]
+  saving: boolean
+}) {
+  const [formData, setFormData] = useState<Testimonial>(testimonial)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(formData)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Name *</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Customer name"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Role *</label>
+          <input
+            type="text"
+            value={formData.role}
+            onChange={(e) => setFormData({...formData, role: e.target.value})}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Medical Student, Nurse, etc."
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-800 mb-2">Testimonial Content *</label>
+        <textarea
+          value={formData.content}
+          onChange={(e) => setFormData({...formData, content: e.target.value})}
+          rows={4}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter the testimonial text..."
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Rating *</label>
+          <select
+            value={formData.rating}
+            onChange={(e) => setFormData({...formData, rating: parseInt(e.target.value)})}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {[1, 2, 3, 4, 5].map(rating => (
+              <option key={rating} value={rating}>
+                {rating} Star{rating > 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-800 mb-2">Social Media Source</label>
+          <select
+            value={formData.socialMediaSource || ''}
+            onChange={(e) => setFormData({...formData, socialMediaSource: e.target.value || undefined})}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select platform (optional)</option>
+            {socialMediaOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex gap-4 pt-4">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+          Save Testimonial
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export default function WelcomePageManagement() {
   const [activeSection, setActiveSection] = useState('hero')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [heroData, setHeroData] = useState<HeroSection>({} as HeroSection)
-  const [aboutData, setAboutData] = useState<AboutSection>({} as AboutSection)
   const [newsletterData, setNewsletterData] = useState<NewsletterSection>({} as NewsletterSection)
   const [categories, setCategories] = useState<FeaturedCategory[]>([])
   const [products, setProducts] = useState<FeaturedProduct[]>([])
@@ -318,18 +563,16 @@ export default function WelcomePageManagement() {
       setHeroData(heroData)
       
       // Fetch all sections in parallel
-      const [categoriesRes, productsRes, testimonialsRes, aboutRes, newsletterRes] = await Promise.all([
+      const [categoriesRes, productsRes, testimonialsRes, newsletterRes] = await Promise.all([
         fetch('/api/admin/homepage/featured-categories'),
         fetch('/api/admin/homepage/featured-products'), 
         fetch('/api/admin/homepage/testimonials'),
-        fetch('/api/admin/homepage/about'),
         fetch('/api/admin/homepage/newsletter')
       ])
       
       if (categoriesRes.ok) setCategories(await categoriesRes.json())
       if (productsRes.ok) setProducts(await productsRes.json())
       if (testimonialsRes.ok) setTestimonials(await testimonialsRes.json())
-      if (aboutRes.ok) setAboutData(await aboutRes.json())
       if (newsletterRes.ok) setNewsletterData(await newsletterRes.json())
     } catch (error) {
       console.error('Error fetching homepage data:', error)
@@ -397,7 +640,6 @@ export default function WelcomePageManagement() {
     { id: 'hero', name: 'Hero Section', icon: Sparkles, color: 'bg-purple-100 text-purple-600' },
     { id: 'categories', name: 'Featured Categories', icon: Type, color: 'bg-blue-100 text-blue-600' },
     { id: 'products', name: 'Featured Products', icon: Package, color: 'bg-green-100 text-green-600' },
-    { id: 'about', name: 'About/Benefits', icon: Award, color: 'bg-orange-100 text-orange-600' },
     { id: 'testimonials', name: 'Testimonials', icon: MessageCircle, color: 'bg-pink-100 text-pink-600' },
     { id: 'newsletter', name: 'Newsletter', icon: Mail, color: 'bg-indigo-100 text-indigo-600' },
     { id: 'settings', name: 'Global Settings', icon: Settings, color: 'bg-gray-100 text-gray-600' }
@@ -474,7 +716,6 @@ export default function WelcomePageManagement() {
                       {section.id === 'hero' && 'Main banner area'}
                       {section.id === 'categories' && 'Featured product categories'}
                       {section.id === 'products' && 'Highlighted products'}
-                      {section.id === 'about' && 'Company benefits & features'}
                       {section.id === 'testimonials' && 'Customer reviews'}
                       {section.id === 'newsletter' && 'Email subscription'}
                       {section.id === 'settings' && 'Global page settings'}
@@ -491,7 +732,6 @@ export default function WelcomePageManagement() {
               {activeSection === 'hero' && 'Use high-quality images or videos that showcase your medical products. Recommended size: 1920x1080px.'}
               {activeSection === 'categories' && 'Select your most popular product categories to feature on the homepage.'}
               {activeSection === 'products' && 'Choose your best-selling or newest products to attract customer attention.'}
-              {activeSection === 'about' && 'Highlight what makes your medical wear special - quality, comfort, durability.'}
               {activeSection === 'testimonials' && 'Real customer reviews build trust. Include photos and detailed roles.'}
               {activeSection === 'newsletter' && 'Offer incentives like discounts for email subscriptions.'}
               {activeSection === 'settings' && 'Configure global settings that affect the entire homepage.'}
@@ -605,164 +845,14 @@ export default function WelcomePageManagement() {
             <FeaturedProducts />
           )}
 
-          {activeSection === 'about' && (
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">About/Benefits Section</h2>
-                <button 
-                  onClick={() => saveSection('about', aboutData, aboutData.id ? 'PUT' : 'POST')}
-                  disabled={saving}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  Save Changes
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">Section Title</label>
-                  <input
-                    type="text"
-                    value={aboutData.title || ''}
-                    onChange={(e) => setAboutData({...aboutData, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Why Choose Our Medical Wear?"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">Description</label>
-                  <textarea
-                    value={aboutData.description || ''}
-                    onChange={(e) => setAboutData({...aboutData, description: e.target.value})}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Describe your company's benefits..."
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="block text-sm font-medium text-gray-800">Features</label>
-                    <button 
-                      onClick={() => {
-                        const newFeature = { icon: 'Star', title: '', description: '', sortOrder: aboutData.features?.length || 0 }
-                        setAboutData({...aboutData, features: [...(aboutData.features || []), newFeature]})
-                      }}
-                      className="flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Feature
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {aboutData.features?.map((feature, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Icon Name</label>
-                            <input
-                              type="text"
-                              value={feature.icon}
-                              onChange={(e) => {
-                                const newFeatures = [...aboutData.features]
-                                newFeatures[index].icon = e.target.value
-                                setAboutData({...aboutData, features: newFeatures})
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                              placeholder="Shield, Heart, etc."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
-                            <input
-                              type="text"
-                              value={feature.title}
-                              onChange={(e) => {
-                                const newFeatures = [...aboutData.features]
-                                newFeatures[index].title = e.target.value
-                                setAboutData({...aboutData, features: newFeatures})
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                              placeholder="Feature title"
-                            />
-                          </div>
-                          <div className="flex items-end">
-                            <button 
-                              onClick={() => {
-                                const newFeatures = aboutData.features.filter((_, i) => i !== index)
-                                setAboutData({...aboutData, features: newFeatures})
-                              }}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
-                          <input
-                            type="text"
-                            value={feature.description}
-                            onChange={(e) => {
-                              const newFeatures = [...aboutData.features]
-                              newFeatures[index].description = e.target.value
-                              setAboutData({...aboutData, features: newFeatures})
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            placeholder="Feature description"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeSection === 'testimonials' && (
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Customer Testimonials</h2>
-                <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Testimonial
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {testimonials.map((testimonial) => (
-                  <div key={testimonial.id} className="border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-medium text-gray-800">{testimonial.name}</h3>
-                        <p className="text-sm text-gray-700">{testimonial.role}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="p-2 text-gray-700 hover:text-blue-600">
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => testimonial.id && deleteItem('testimonials', testimonial.id)}
-                          className="p-2 text-gray-700 hover:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-gray-800 mb-3">"{testimonial.content}"</p>
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TestimonialsSection 
+              testimonials={testimonials} 
+              onRefresh={fetchHomepageData}
+              onSave={(data) => saveSection('testimonials', data, data.id ? 'PUT' : 'POST')}
+              onDelete={(id) => deleteItem('testimonials', id)}
+              saving={saving}
+            />
           )}
 
           {activeSection === 'newsletter' && (

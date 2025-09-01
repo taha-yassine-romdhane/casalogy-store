@@ -17,12 +17,27 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate form submission
-    setTimeout(() => {
-      setSubmitted(true)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+      
+      if (response.ok) {
+        setSubmitted(true)
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        throw new Error('Failed to send message')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      alert('Failed to send message. Please try again.')
+    } finally {
       setIsSubmitting(false)
-      setFormData({ name: '', email: '', subject: '', message: '' })
-    }, 1000)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -88,8 +103,9 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-bold text-[#282828] mb-1">Address</h3>
                     <p className="text-gray-600">
-                      123 Avenue Habib Bourguiba<br />
-                      Tunis 1000, Tunisia
+                      Golden Center Immobilier<br />
+                      5ème étage B54<br />
+                      Sousse, Tunisia
                     </p>
                   </div>
                 </div>
@@ -100,8 +116,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-[#282828] mb-1">Phone</h3>
-                    <p className="text-gray-600">+216 71 123 456</p>
-                    <p className="text-gray-600">+216 98 765 432</p>
+                    <p className="text-gray-600">+216 99 126 575</p>
                   </div>
                 </div>
 
@@ -111,8 +126,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-[#282828] mb-1">Email</h3>
-                    <p className="text-gray-600">info@casalogy.tn</p>
-                    <p className="text-gray-600">support@casalogy.tn</p>
+                    <p className="text-gray-600">casalogy23@gmail.com</p>
                   </div>
                 </div>
 
@@ -281,17 +295,22 @@ export default function ContactPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#282828] mb-4">Visit Our Store</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Located in the heart of Tunis, our showroom displays the full range of medical wear. 
+              Located in Sousse at Golden Center, our showroom displays the full range of medical wear. 
               Come try on our products and get personalized fitting advice.
             </p>
           </div>
           
-          <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <MapPin className="w-12 h-12 mx-auto mb-4" />
-              <p className="text-lg font-medium mb-2">Interactive Map</p>
-              <p className="text-sm">123 Avenue Habib Bourguiba, Tunis 1000, Tunisia</p>
-            </div>
+          <div className="rounded-lg overflow-hidden h-96">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3235.8274806!2d10.6293695!3d35.8274806!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13027500220d4097%3A0xee312e833d444c7d!2sGolden%20Center!5e0!3m2!1sen!2stn!4v1701234567890!5m2!1sen!2stn"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Golden Center Location"
+            ></iframe>
           </div>
         </div>
       </section>

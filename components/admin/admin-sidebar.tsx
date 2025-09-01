@@ -10,20 +10,15 @@ import {
   Settings, 
   LogOut, 
   X,
-  GraduationCap,
   BarChart3,
-  Star,
+  GraduationCap,
   Image,
   Home,
   FolderTree,
   Palette,
-  Truck,
-  Tag,
   MessageSquare,
   FileText,
   Globe,
-  ChevronDown,
-  ChevronRight
 } from 'lucide-react'
 
 const sidebarSections = [
@@ -105,26 +100,11 @@ const sidebarSections = [
         href: '/admin/student-verification',
         icon: GraduationCap
       },
-      {
-        name: 'Shipping',
-        href: '/admin/shipping',
-        icon: Truck
-      },
-      {
-        name: 'Coupons & Discounts',
-        href: '/admin/coupons',
-        icon: Tag
-      }
     ]
   },
   {
     title: 'Customer Support',
     items: [
-      {
-        name: 'Reviews',
-        href: '/admin/reviews',
-        icon: Star
-      },
       {
         name: 'Contact Messages',
         href: '/admin/messages',
@@ -152,7 +132,6 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const [expandedSections, setExpandedSections] = useState<string[]>(['Dashboard', 'Product Management'])
 
   const handleLogout = async () => {
     try {
@@ -164,13 +143,6 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSideb
     }
   }
 
-  const toggleSection = (sectionTitle: string) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionTitle)
-        ? prev.filter(title => title !== sectionTitle)
-        : [...prev, sectionTitle]
-    )
-  }
 
   const isCurrentSection = (items: any[]) => {
     return items.some(item => pathname === item.href)
@@ -204,62 +176,49 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSideb
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
         {sidebarSections.map((section) => {
-          const isExpanded = expandedSections.includes(section.title)
           const isCurrent = isCurrentSection(section.items)
           
           return (
             <div key={section.title} className="space-y-1">
-              <button
-                onClick={() => toggleSection(section.title)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  isCurrent
-                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                }`}
-              >
-                <span className="flex items-center">
-                  <span className={`mr-2 text-xs font-semibold ${isCurrent ? 'text-blue-400' : 'text-slate-500'}`}>
-                    {section.title}
-                  </span>
+              <div className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
+                isCurrent
+                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30'
+                  : 'text-slate-300'
+              }`}>
+                <span className={`text-xs font-semibold ${isCurrent ? 'text-blue-400' : 'text-slate-500'}`}>
+                  {section.title}
                 </span>
-                {isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
+              </div>
 
-              {isExpanded && (
-                <div className="ml-2 space-y-1 border-l border-slate-700 pl-4">
-                  {section.items.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.href
-                    
-                    return (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                          router.push(item.href)
-                          setSidebarOpen(false)
-                        }}
-                        className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-200 ${
-                          isActive
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 transform scale-105'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-700/60 hover:translate-x-1'
-                        }`}
-                      >
-                        <Icon className={`mr-3 h-4 w-4 transition-colors duration-200 ${
-                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
-                        }`} />
-                        <span className="truncate">{item.name}</span>
-                        {isActive && (
-                          <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-75"></div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+              <div className="ml-2 space-y-1 border-l border-slate-700 pl-4">
+                {section.items.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => {
+                        router.push(item.href)
+                        setSidebarOpen(false)
+                      }}
+                      className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg w-full text-left transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 transform scale-105'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-700/60 hover:translate-x-1'
+                      }`}
+                    >
+                      <Icon className={`mr-3 h-4 w-4 transition-colors duration-200 ${
+                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                      }`} />
+                      <span className="truncate">{item.name}</span>
+                      {isActive && (
+                        <div className="ml-auto w-2 h-2 bg-white rounded-full opacity-75"></div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )
         })}

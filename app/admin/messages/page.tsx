@@ -21,7 +21,6 @@ interface ContactMessage {
   id: string
   name: string
   email: string
-  phone?: string
   subject: string
   message: string
   isRead: boolean
@@ -29,8 +28,8 @@ interface ContactMessage {
   priority: 'low' | 'medium' | 'high'
   status: 'new' | 'in_progress' | 'resolved'
   createdAt: string
+  updatedAt: string
   respondedAt?: string
-  tags?: string[]
 }
 
 export default function MessagesPage() {
@@ -44,120 +43,104 @@ export default function MessagesPage() {
   const [showReplyModal, setShowReplyModal] = useState(false)
   const [replyText, setReplyText] = useState('')
 
-  // Mock data for demonstration
+  // Fetch messages from database
   useEffect(() => {
-    const mockMessages: ContactMessage[] = [
-      {
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@email.com',
-        phone: '+216 23 456 789',
-        subject: 'Question about scrub sizing',
-        message: 'Hi, I am interested in ordering scrubs but I am not sure about the sizing. Could you please provide more information about your size chart? I normally wear a size M but I want to make sure it fits properly.',
-        isRead: false,
-        isStarred: true,
-        priority: 'high',
-        status: 'new',
-        createdAt: '2024-01-15T10:30:00Z',
-        tags: ['sizing', 'scrubs']
-      },
-      {
-        id: '2',
-        name: 'Ahmed Ben Ali',
-        email: 'ahmed.benali@hospital.tn',
-        phone: '+216 98 765 432',
-        subject: 'Bulk order inquiry',
-        message: 'Hello, I am the procurement manager at Tunis Central Hospital. We are interested in placing a bulk order for medical scrubs for our nursing staff. Could you please send us a quote for 100 sets of scrubs in various sizes? We would also like to know about your delivery timeline.',
-        isRead: true,
-        isStarred: false,
-        priority: 'high',
-        status: 'in_progress',
-        createdAt: '2024-01-14T14:20:00Z',
-        respondedAt: '2024-01-14T16:45:00Z',
-        tags: ['bulk-order', 'hospital', 'quote']
-      },
-      {
-        id: '3',
-        name: 'Fatima Trabelsi',
-        email: 'fatima.trabelsi@gmail.com',
-        subject: 'Student discount verification',
-        message: 'I am a nursing student at the University of Monastir. I would like to apply for the student discount. I have uploaded my student ID but I have not received any confirmation. Could you please help me with this?',
-        isRead: true,
-        isStarred: false,
-        priority: 'medium',
-        status: 'resolved',
-        createdAt: '2024-01-13T09:15:00Z',
-        respondedAt: '2024-01-13T11:30:00Z',
-        tags: ['student-discount', 'verification']
-      },
-      {
-        id: '4',
-        name: 'Mohamed Karray',
-        email: 'mohamed.karray@clinic.tn',
-        subject: 'Return request',
-        message: 'I recently purchased a lab coat (Order #12345) but it does not fit properly. I would like to return it and get a refund. The item is still in its original packaging. Please let me know the return process.',
-        isRead: false,
-        isStarred: false,
-        priority: 'medium',
-        status: 'new',
-        createdAt: '2024-01-12T16:45:00Z',
-        tags: ['return', 'refund', 'lab-coat']
-      },
-      {
-        id: '5',
-        name: 'Leila Mansouri',
-        email: 'leila.mansouri@email.com',
-        subject: 'Payment issue',
-        message: 'I tried to place an order but I am having trouble with the payment. The page keeps loading and does not complete the transaction. I tried multiple times with different cards. Please help.',
-        isRead: true,
-        isStarred: true,
-        priority: 'high',
-        status: 'in_progress',
-        createdAt: '2024-01-11T13:20:00Z',
-        tags: ['payment', 'technical-issue']
-      },
-      {
-        id: '6',
-        name: 'Youssef Hamdi',
-        email: 'youssef.hamdi@email.com',
-        subject: 'Product availability',
-        message: 'Hello, I am looking for navy blue scrubs in size XL. I see they are out of stock on the website. When do you expect them to be available again?',
-        isRead: false,
-        isStarred: false,
-        priority: 'low',
-        status: 'new',
-        createdAt: '2024-01-10T11:10:00Z',
-        tags: ['stock', 'availability']
-      }
-    ]
-    
-    setTimeout(() => {
-      setMessages(mockMessages)
-      setLoading(false)
-    }, 500)
+    fetchMessages()
   }, [])
 
-  const handleMarkAsRead = (messageId: string) => {
-    setMessages(messages.map(msg => 
-      msg.id === messageId ? { ...msg, isRead: true } : msg
-    ))
+  const fetchMessages = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/admin/messages')
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data)
+      } else {
+        throw new Error('Failed to fetch messages')
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleToggleStar = (messageId: string) => {
-    setMessages(messages.map(msg => 
-      msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg
-    ))
+  const handleMarkAsRead = async (messageId: string) => {
+    const message = messages.find(m => m.id === messageId)
+    if (!message || message.isRead) return
+    
+    try {
+      const response = await fetch(`/api/admin/messages?id=${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...message, isRead: true })
+      })
+      
+      if (response.ok) {
+        setMessages(messages.map(msg => 
+          msg.id === messageId ? { ...msg, isRead: true } : msg
+        ))
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error)
+    }
   }
 
-  const handleUpdateStatus = (messageId: string, status: ContactMessage['status']) => {
-    setMessages(messages.map(msg => 
-      msg.id === messageId ? { ...msg, status } : msg
-    ))
+  const handleToggleStar = async (messageId: string) => {
+    const message = messages.find(m => m.id === messageId)
+    if (!message) return
+    
+    try {
+      const response = await fetch(`/api/admin/messages?id=${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...message, isStarred: !message.isStarred })
+      })
+      
+      if (response.ok) {
+        setMessages(messages.map(msg => 
+          msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg
+        ))
+      }
+    } catch (error) {
+      console.error('Error toggling star:', error)
+    }
   }
 
-  const handleDelete = (messageId: string) => {
-    setMessages(messages.filter(m => m.id !== messageId))
-    setDeleteConfirm(null)
+  const handleUpdateStatus = async (messageId: string, status: ContactMessage['status']) => {
+    const message = messages.find(m => m.id === messageId)
+    if (!message) return
+    
+    try {
+      const response = await fetch(`/api/admin/messages?id=${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...message, status })
+      })
+      
+      if (response.ok) {
+        setMessages(messages.map(msg => 
+          msg.id === messageId ? { ...msg, status } : msg
+        ))
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+    }
+  }
+
+  const handleDelete = async (messageId: string) => {
+    try {
+      const response = await fetch(`/api/admin/messages?id=${messageId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        setMessages(messages.filter(m => m.id !== messageId))
+        setDeleteConfirm(null)
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error)
+    }
   }
 
   const handleViewMessage = (message: ContactMessage) => {
@@ -167,20 +150,32 @@ export default function MessagesPage() {
     }
   }
 
-  const handleSendReply = () => {
+  const handleSendReply = async () => {
     if (selectedMessage && replyText.trim()) {
-      // In a real app, this would send an email
-      const updatedMessage = {
-        ...selectedMessage,
-        status: 'in_progress' as const,
-        respondedAt: new Date().toISOString()
+      try {
+        const updatedMessage = {
+          ...selectedMessage,
+          status: 'in_progress' as const,
+          respondedAt: new Date().toISOString()
+        }
+        
+        const response = await fetch(`/api/admin/messages?id=${selectedMessage.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedMessage)
+        })
+        
+        if (response.ok) {
+          setMessages(messages.map(msg => 
+            msg.id === selectedMessage.id ? updatedMessage : msg
+          ))
+          setSelectedMessage(updatedMessage)
+          setReplyText('')
+          setShowReplyModal(false)
+        }
+      } catch (error) {
+        console.error('Error sending reply:', error)
       }
-      setMessages(messages.map(msg => 
-        msg.id === selectedMessage.id ? updatedMessage : msg
-      ))
-      setSelectedMessage(updatedMessage)
-      setReplyText('')
-      setShowReplyModal(false)
     }
   }
 
@@ -421,9 +416,6 @@ export default function MessagesPage() {
                       <div>
                         <div className="text-sm font-medium text-gray-800">{message.name}</div>
                         <div className="text-sm text-gray-600">{message.email}</div>
-                        {message.phone && (
-                          <div className="text-xs text-gray-500">{message.phone}</div>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -486,12 +478,6 @@ export default function MessagesPage() {
                       {selectedMessage.name}
                     </div>
                     <div>{selectedMessage.email}</div>
-                    {selectedMessage.phone && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="w-4 h-4" />
-                        {selectedMessage.phone}
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     {getPriorityBadge(selectedMessage.priority)}

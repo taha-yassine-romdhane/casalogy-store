@@ -105,52 +105,104 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative">
-      {/* Main Hero */}
-      <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] bg-gray-100 overflow-hidden">
-        {/* Background Media */}
-        {data.mediaType === 'image' ? (
-          <>
-            {images.length > 0 ? (
-              <>
-                {/* Image Carousel */}
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${
-                      index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <Image
-                      src={image}
-                      alt={`Hero image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="100vw"
-                      quality={95}
-                      priority={index === 0}
-                    />
-                  </div>
-                ))}
-                
-                {/* Carousel Indicators */}
-                {hasMultipleImages && (
-                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
-                    {images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === currentImageIndex 
-                            ? 'bg-white w-8' 
-                            : 'bg-white/50 hover:bg-white/75'
-                        }`}
-                        aria-label={`Go to image ${index + 1}`}
+    <>
+      {/* Mobile Only Hero Section */}
+      <section className="md:hidden relative">
+        <div className="relative">
+          {images.length > 0 && images.map((image, index) => (
+            <div
+              key={index}
+              className={`relative ${
+                index === currentImageIndex ? 'block' : 'hidden'
+              }`}
+            >
+              <Image
+                src={image}
+                alt={`Hero image ${index + 1}`}
+                width={1920}
+                height={1080}
+                className="w-full h-auto object-contain"
+                sizes="100vw"
+                quality={95}
+                priority={index === 0}
+              />
+              {/* Mobile Shop Now Button */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Link
+                  href="/scrubs"
+                  className="px-6 py-2.5 bg-[#282828] text-white font-medium text-sm hover:bg-gray-800 transition-colors shadow-lg rounded"
+                >
+                  SHOP NOW
+                </Link>
+              </div>
+            </div>
+          ))}
+          
+          {/* Mobile Carousel Indicators */}
+          {hasMultipleImages && (
+            <div className="flex justify-center gap-2 py-3 bg-white">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentImageIndex 
+                      ? 'bg-black w-8' 
+                      : 'bg-black/40 hover:bg-black/60'
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Desktop Only Hero Section */}
+      <section className="hidden md:block relative">
+        <div className="relative h-[600px] lg:h-[700px] bg-gray-100 overflow-hidden">
+          {/* Background Media */}
+          {data.mediaType === 'image' ? (
+            <>
+              {images.length > 0 ? (
+                <>
+                  {images.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-1000 ${
+                        index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`Hero image ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="100vw"
+                        quality={95}
+                        priority={index === 0}
                       />
-                    ))}
-                  </div>
-                )}
-              </>
+                    </div>
+                  ))}
+                  
+                  {/* Desktop Carousel Indicators */}
+                  {hasMultipleImages && (
+                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+                      {images.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            index === currentImageIndex 
+                              ? 'bg-white w-8' 
+                              : 'bg-white/50 hover:bg-white/75'
+                          }`}
+                          aria-label={`Go to image ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-gray-50">
                 <div className="absolute inset-0 opacity-10">
@@ -174,7 +226,8 @@ export function HeroSection() {
           </div>
         )}
         
-        <div className="relative z-10 h-full flex items-center justify-center">
+        {/* Hide content on mobile, show on desktop */}
+        <div className="relative z-10 h-full hidden md:flex items-center justify-center">
           <div className="max-w-[1920px] mx-auto px-4 lg:px-8 w-full">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 text-[#282828] leading-tight">
@@ -185,27 +238,25 @@ export function HeroSection() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <Link
-                  href={data.buttonLink}
+                  href="/scrubs"
                   className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-[#282828] text-white font-medium text-center hover:bg-gray-800 transition-colors text-sm sm:text-base"
                 >
-                  {data.buttonText}
+                  SHOP NOW
                 </Link>
-                {data.buttonLink !== '/size-guide' && (
-                  <Link
-                    href="/size-guide"
-                    className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#282828] font-medium text-center border-2 border-[#282828] hover:bg-gray-50 transition-colors text-sm sm:text-base"
-                  >
-                    SIZE GUIDE
-                  </Link>
-                )}
+                <Link
+                  href="/size-guide"
+                  className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#282828] font-medium text-center border-2 border-[#282828] hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                >
+                  SIZE GUIDE
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Feature Strips */}
-      <div className="relative grid md:grid-cols-3 bg-white overflow-hidden">
+        {/* Feature Strips - Hidden on mobile */}
+        <div className="relative hidden md:grid md:grid-cols-3 bg-white overflow-hidden">
         {/* Animated light bond */}
         <div 
           className="absolute top-0 h-1 w-1/3 bg-gradient-to-r from-transparent via-gray-600 to-transparent transition-transform duration-1000 ease-in-out"
@@ -227,7 +278,8 @@ export function HeroSection() {
           <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2 text-gray-900">Made in Tunisia</h3>
           <p className="text-gray-800 text-sm sm:text-base">Supporting local manufacturing</p>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   )
 }

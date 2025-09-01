@@ -105,7 +105,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
 
             {/* Center Logo */}
             <Link href="/" className="flex items-center">
-              <span className="text-3xl font-bold text-[#282828] tracking-wider">CASALOGY</span>
+              <span className="text-3xl font-black text-[#282828] tracking-wide" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>CASALOGY</span>
             </Link>
 
             {/* Right Navigation */}
@@ -249,10 +249,10 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
 
         {/* Mobile Menu */}
         <div className={cn(
-          "lg:hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300",
+          "lg:hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300 flex flex-col",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
             <span className="text-xl font-bold text-[#282828]">CASALOGY</span>
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -262,7 +262,8 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
             </button>
           </div>
           
-          <div className="flex flex-col space-y-4 p-4">
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex flex-col space-y-4 p-4">
             {/* User Info */}
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-10 h-10 bg-[#282828] text-white rounded-full flex items-center justify-center text-sm font-medium">
@@ -330,6 +331,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
               <LogOut className="w-5 h-5 mr-3" />
               Logout
             </button>
+            </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -60,101 +60,50 @@ interface CustomerSegment {
   revenue: number
 }
 
+interface AnalyticsResponse {
+  revenue: AnalyticsData['revenue']
+  orders: AnalyticsData['orders'] 
+  customers: AnalyticsData['customers']
+  avgOrderValue: AnalyticsData['avgOrderValue']
+  topProducts: TopProduct[]
+  customerSegments: CustomerSegment[]
+  insights: {
+    topRegion: string
+    topRegionPercentage: string
+    conversionRate: number
+    bestCategory: string
+  }
+}
+
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('30days')
-  
-  // Sample analytics data
-  const [analytics] = useState<AnalyticsData>({
-    revenue: {
-      current: 24750.80,
-      previous: 18650.40,
-      change: 32.7
-    },
-    orders: {
-      current: 145,
-      previous: 112,
-      change: 29.5
-    },
-    customers: {
-      current: 87,
-      previous: 65,
-      change: 33.8
-    },
-    avgOrderValue: {
-      current: 170.70,
-      previous: 166.50,
-      change: 2.5
-    }
-  })
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Sample top products data
-  const [topProducts] = useState<TopProduct[]>([
-    {
-      id: '1',
-      name: 'Medical Scrubs - Navy Blue',
-      category: 'Scrubs',
-      sales: 45,
-      revenue: 2025.00,
-      trend: 15.2
-    },
-    {
-      id: '2',
-      name: 'Laboratory Coat - White',
-      category: 'Lab Coats',
-      sales: 32,
-      revenue: 1920.00,
-      trend: 8.7
-    },
-    {
-      id: '3',
-      name: 'Surgical Mask (Pack of 50)',
-      category: 'PPE',
-      sales: 78,
-      revenue: 1170.00,
-      trend: 25.3
-    },
-    {
-      id: '4',
-      name: 'Nursing Shoes - Comfortable',
-      category: 'Footwear',
-      sales: 28,
-      revenue: 1680.00,
-      trend: -3.2
-    },
-    {
-      id: '5',
-      name: 'Stethoscope - Professional',
-      category: 'Equipment',
-      sales: 15,
-      revenue: 2250.00,
-      trend: 12.4
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/admin/analytics?dateRange=${dateRange}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics data')
+        }
+        const data = await response.json()
+        setAnalytics(data)
+      } catch (error) {
+        console.error('Error fetching analytics:', error)
+        setError('Failed to load analytics data')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ])
 
-  // Sample customer segments
-  const [customerSegments] = useState<CustomerSegment[]>([
-    {
-      type: 'Medical Professionals',
-      count: 52,
-      percentage: 59.8,
-      revenue: 16890.50
-    },
-    {
-      type: 'Medical Students',
-      count: 28,
-      percentage: 32.2,
-      revenue: 5420.30
-    },
-    {
-      type: 'Healthcare Institutions',
-      count: 7,
-      percentage: 8.0,
-      revenue: 2440.00
-    }
-  ])
+    fetchAnalytics()
+  }, [dateRange])
 
   const formatCurrency = (amount: number): string => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`
   }
 
   const formatPercentage = (value: number): string => {
@@ -179,6 +128,33 @@ export default function AnalyticsPage() {
       <TrendingUp className="w-3 h-3 text-green-600" />
     ) : (
       <TrendingDown className="w-3 h-3 text-red-600" />
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#282828] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading analytics...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <p className="text-red-600">{error || 'Failed to load analytics data'}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-[#282828] text-white rounded-lg hover:bg-gray-800"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -322,7 +298,7 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-6">Customer Segments</h3>
           <div className="space-y-4">
-            {customerSegments.map((segment, index) => (
+            {analytics.customerSegments.map((segment, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
@@ -377,7 +353,7 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {topProducts.map((product) => (
+                {analytics.topProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
@@ -431,7 +407,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">Top Location</p>
-                <p className="text-sm text-gray-600">New York, NY (24% of orders)</p>
+                <p className="text-sm text-gray-600">{analytics.insights.topRegion} ({analytics.insights.topRegionPercentage}% of customers)</p>
               </div>
             </div>
 
@@ -441,7 +417,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">Best Category</p>
-                <p className="text-sm text-gray-600">Medical Scrubs (42% of revenue)</p>
+                <p className="text-sm text-gray-600">{analytics.insights.bestCategory} (Top category)</p>
               </div>
             </div>
 
@@ -451,7 +427,7 @@ export default function AnalyticsPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">Conversion Rate</p>
-                <p className="text-sm text-gray-600">3.2% (+0.4% vs last month)</p>
+                <p className="text-sm text-gray-600">{analytics.insights.conversionRate}% (estimated)</p>
               </div>
             </div>
           </div>

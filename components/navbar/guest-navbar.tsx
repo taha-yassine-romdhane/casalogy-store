@@ -64,7 +64,7 @@ export function GuestNavbar() {
 
             {/* Center Logo */}
             <Link href="/" className="flex items-center">
-              <span className="text-3xl font-bold text-[#282828] tracking-wider">CASALOGY</span>
+              <span className="text-3xl font-black text-[#282828] tracking-wide" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>CASALOGY</span>
             </Link>
 
             {/* Right Navigation */}
@@ -150,10 +150,10 @@ export function GuestNavbar() {
 
         {/* Mobile Menu */}
         <div className={cn(
-          "lg:hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300",
+          "lg:hidden fixed inset-0 bg-white z-50 transform transition-transform duration-300 flex flex-col",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-300">
+          <div className="flex items-center justify-between p-4 border-b border-gray-300 flex-shrink-0">
             <span className="text-xl font-bold text-[#282828]">Menu</span>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
@@ -162,30 +162,32 @@ export function GuestNavbar() {
               <X className="w-6 h-6 text-[#282828]" />
             </button>
           </div>
-          <div className="p-4 space-y-4">
-            <Link href="/women" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
-              WOMEN
-            </Link>
-            <Link href="/men" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
-              MEN
-            </Link>
-            <Link href="/new-arrivals" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
-              NEW
-            </Link>
-            <div className="pt-4 space-y-3 border-t border-gray-300">
-              <Link href="/scrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Scrubs</Link>
-              <Link href="/lab-coats" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Lab Coats</Link>
-              <Link href="/underscrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Underscrubs</Link>
-              <Link href="/outerwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Outerwear</Link>
-              <Link href="/footwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Footwear</Link>
-              <Link href="/accessories" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Accessories</Link>
-              <Link href="/size-guide" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Size Guide</Link>
-            </div>
-            <div className="pt-6 border-t border-gray-300">
-              <Link href="/login" className="flex items-center py-3 text-[#282828]" onClick={handleLinkClick}>
-                <User className="w-5 h-5 mr-3" />
-                Login
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="p-4 space-y-4">
+              <Link href="/women" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
+                WOMEN
               </Link>
+              <Link href="/men" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
+                MEN
+              </Link>
+              <Link href="/new-arrivals" className="block py-3 text-lg font-medium border-b text-[#282828]" onClick={handleLinkClick}>
+                NEW
+              </Link>
+              <div className="pt-4 space-y-3 border-t border-gray-300">
+                <Link href="/scrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Scrubs</Link>
+                <Link href="/lab-coats" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Lab Coats</Link>
+                <Link href="/underscrubs" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Underscrubs</Link>
+                <Link href="/outerwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Outerwear</Link>
+                <Link href="/footwear" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Footwear</Link>
+                <Link href="/accessories" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Accessories</Link>
+                <Link href="/size-guide" className="block py-2 text-[#282828]" onClick={handleLinkClick}>Size Guide</Link>
+              </div>
+              <div className="pt-6 border-t border-gray-300">
+                <Link href="/login" className="flex items-center py-3 text-[#282828]" onClick={handleLinkClick}>
+                  <User className="w-5 h-5 mr-3" />
+                  Login
+                </Link>
+              </div>
             </div>
           </div>
         </div>

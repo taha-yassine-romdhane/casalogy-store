@@ -428,17 +428,17 @@ model FeaturedProduct {
 }
 
 model Testimonial {
-  id          String    @id @default(cuid())
-  name        String
-  role        String    // "Medical Student", "Nurse", etc.
-  content     String
-  rating      Int       @default(5) // 1-5 stars
-  imageUrl    String?
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
+  id                String    @id @default(cuid())
+  name              String
+  role              String    // "Medical Student", "Nurse", etc.
+  content           String
+  rating            Int       @default(5) // 1-5 stars
+  socialMediaSource String?   // "facebook", "instagram", "whatsapp", "tiktok", "messenger"
+  isActive          Boolean   @default(true)
+  sortOrder         Int       @default(0)
   
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   
   @@map("testimonials")
 }
@@ -455,6 +455,24 @@ model NewsletterSection {
   updatedAt   DateTime  @updatedAt
   
   @@map("newsletter_sections")
+}
+
+model ContactMessage {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  subject     String
+  message     String
+  isRead      Boolean   @default(false)
+  isStarred   Boolean   @default(false)
+  priority    String    @default("medium") // "low", "medium", "high"
+  status      String    @default("new") // "new", "in_progress", "resolved"
+  respondedAt DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("contact_messages")
 }
 
 model AboutSection {

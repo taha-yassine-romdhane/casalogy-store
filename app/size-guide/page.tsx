@@ -71,26 +71,6 @@ const measurementPoints = [
   }
 ]
 
-const fitTypes = [
-  {
-    name: 'Classic Fit',
-    description: 'Traditional, comfortable fit with room for movement',
-    benefits: ['Maximum comfort', 'Professional appearance', 'Suitable for all body types'],
-    recommended: 'Long shifts, general medical practice'
-  },
-  {
-    name: 'Modern Fit',
-    description: 'Contemporary cut that follows body contours more closely',
-    benefits: ['Flattering silhouette', 'Less bulk', 'Modern professional look'],
-    recommended: 'Administrative roles, patient-facing positions'
-  },
-  {
-    name: 'Athletic Fit',
-    description: 'Tailored for active professionals with broader shoulders',
-    benefits: ['Accommodates muscular build', 'Flexible movement', 'Maintains professional look'],
-    recommended: 'Physical therapy, emergency medicine, surgery'
-  }
-]
 
 export default function SizeGuidePage() {
   const [activeChart, setActiveChart] = useState('scrub-tops')
@@ -375,43 +355,6 @@ export default function SizeGuidePage() {
         </div>
       </section>
 
-      {/* Fit Types */}
-      <section className="py-16">
-        <div className="max-w-[1920px] mx-auto px-4 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#282828] mb-4">Choose Your Fit</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Different fits serve different purposes. Choose the style that best suits your work environment and personal preference.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {fitTypes.map((fit, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-bold text-[#282828] mb-3">{fit.name}</h3>
-                <p className="text-gray-600 mb-4">{fit.description}</p>
-                
-                <div className="mb-4">
-                  <h4 className="font-semibold text-[#282828] mb-2">Benefits:</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {fit.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <span className="text-xs font-medium text-blue-800 uppercase tracking-wide">Best For:</span>
-                  <p className="text-sm text-blue-700 mt-1">{fit.recommended}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Measurement Guide Modal */}
       {showMeasurementGuide && (
@@ -472,21 +415,15 @@ export default function SizeGuidePage() {
       <section className="py-16 bg-[#282828] text-white">
         <div className="max-w-[1920px] mx-auto px-4 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Need Personal Fitting Advice?</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-white mb-8 max-w-2xl mx-auto">
             Visit our showroom in Tunis for personalized fitting sessions, or contact our sizing experts for help choosing the right size.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <a
               href="/contact"
               className="inline-block px-8 py-4 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors rounded-lg"
             >
               Book Fitting Appointment
-            </a>
-            <a
-              href="tel:+21671123456"
-              className="inline-block px-8 py-4 bg-white text-[#282828] font-medium hover:bg-gray-100 transition-colors rounded-lg"
-            >
-              Call Sizing Expert
             </a>
           </div>
         </div>
