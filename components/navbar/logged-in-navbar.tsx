@@ -164,16 +164,27 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
                       My Profile
                     </Link>
                     
-                    <Link 
-                      href="/orders" 
+                    <Link
+                      href="/orders"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       onClick={() => setIsUserDropdownOpen(false)}
                     >
                       <Package className="w-4 h-4" />
                       My Orders
                     </Link>
-                    
-                    <button 
+
+                    {user.role === 'ADMIN' && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        <Settings className="w-4 h-4" />
+                        Admin Dashboard
+                      </Link>
+                    )}
+
+                    <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
@@ -330,7 +341,13 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
               <Package className="w-5 h-5 mr-3" />
               My Orders
             </Link>
-            <button 
+            {user.role === 'ADMIN' && (
+              <Link href="/admin" className="flex items-center py-3 text-[#282828]" onClick={handleLinkClick}>
+                <Settings className="w-5 h-5 mr-3" />
+                Admin Dashboard
+              </Link>
+            )}
+            <button
               onClick={handleLogout}
               className="flex items-center py-3 text-red-600"
             >

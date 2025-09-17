@@ -45,3 +45,6 @@ next-env.d.ts
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# local test products (ignore test photos)
+/public/test-products/

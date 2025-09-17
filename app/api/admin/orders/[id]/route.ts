@@ -31,25 +31,53 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Check if order is being confirmed (status changes from PENDING to CONFIRMED)
     const isBeingConfirmed = currentOrder.status === 'PENDING' && status === 'CONFIRMED'
-    
+
     // Check if confirmed order is being cancelled (status changes from CONFIRMED to CANCELLED)
     const isBeingCancelled = currentOrder.status === 'CONFIRMED' && status === 'CANCELLED'
 
+    console.log(`🔍 Order status check:`, {
+      orderId: id,
+      currentStatus: currentOrder.status,
+      newStatus: status,
+      isBeingConfirmed,
+      isBeingCancelled,
+      itemCount: currentOrder.items.length
+    })
+
     // If order is being confirmed, decrement stock quantities
     if (isBeingConfirmed) {
-      console.log(`Order ${id} is being confirmed, decrementing stock...`)
-      
+      console.log(`🔄 Order ${id} is being confirmed, decrementing stock...`)
+
       for (const item of currentOrder.items) {
+        console.log(`📦 Processing item:`, {
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          colorName: item.colorName,
+          sizeName: item.sizeName
+        })
+
         if (item.variantId) {
           const variant = await prisma.productVariant.findUnique({
-            where: { id: item.variantId }
+            where: { id: item.variantId },
+            include: {
+              color: { select: { colorName: true } },
+              size: { select: { name: true } }
+            }
           })
-          
+
+          console.log(`📋 Found variant:`, {
+            variantId: item.variantId,
+            currentStock: variant?.quantity,
+            variantExists: !!variant
+          })
+
           if (variant) {
             // Check if there's enough stock
             if (variant.quantity < item.quantity) {
+              console.log(`❌ Insufficient stock for variant ${item.variantId}: available=${variant.quantity}, required=${item.quantity}`)
               return NextResponse.json(
-                { 
+                {
                   error: `Insufficient stock for product variant. Available: ${variant.quantity}, Required: ${item.quantity}`,
                   productId: item.productId,
                   variantId: item.variantId
@@ -57,9 +85,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 { status: 400 }
               )
             }
-            
+
             // Decrement stock
-            await prisma.productVariant.update({
+            const updatedVariant = await prisma.productVariant.update({
               where: { id: item.variantId },
               data: {
                 quantity: {
@@ -67,9 +95,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 }
               }
             })
-            
-            console.log(`Decremented stock for variant ${item.variantId}: -${item.quantity}`)
+
+            console.log(`✅ Decremented stock for variant ${item.variantId}: ${variant.quantity} -> ${updatedVariant.quantity} (-${item.quantity})`)
+          } else {
+            console.log(`⚠️  Variant not found: ${item.variantId}`)
           }
+        } else {
+          console.log(`⚠️  Item has no variantId: productId=${item.productId}`)
         }
       }
     }

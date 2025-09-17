@@ -2,6 +2,7 @@
 
 import { useCart } from '@/contexts/cart-context'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag, Truck } from 'lucide-react'
 
 export default function CartPage() {
@@ -56,13 +57,15 @@ export default function CartPage() {
             <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
               {items.map((item) => (
                 <div key={item.id} className="p-6">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     {/* Product Image */}
-                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                    <div className="w-28 h-28 sm:w-24 sm:h-24 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center mx-auto sm:mx-0">
                       {item.image ? (
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.productName}
+                          width={112}
+                          height={112}
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
@@ -74,34 +77,36 @@ export default function CartPage() {
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/products/${item.productSlug}`}
-                        className="font-semibold text-lg text-[#282828] hover:text-blue-600 transition-colors line-clamp-2"
+                        className="font-semibold text-base sm:text-lg text-[#282828] hover:text-blue-600 transition-colors line-clamp-2"
                       >
                         {item.productName}
                       </Link>
                       
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
                         <span>Color: <span className="font-medium text-gray-800">{item.color}</span></span>
                         <span>Size: <span className="font-medium text-gray-800">{item.size}</span></span>
                       </div>
 
-                      <div className="flex items-center justify-between mt-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-gray-600">Quantity:</span>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              aria-label={`Decrease quantity of ${item.productName}`}
+                              className="p-2.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:opacity-50"
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="w-4 h-4 text-gray-600" />
                             </button>
-                            <span className="text-lg font-semibold px-4 py-2 bg-gray-50 rounded-lg min-w-[3rem] text-center">
+                            <span className="text-lg font-semibold text-[#282828] px-4 py-2 bg-gray-50 rounded-lg min-w-[3rem] text-center">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              aria-label={`Increase quantity of ${item.productName}`}
+                              className="p-2.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:opacity-50"
                               disabled={item.quantity >= item.maxQuantity}
                             >
                               <Plus className="w-4 h-4 text-gray-600" />
@@ -110,7 +115,7 @@ export default function CartPage() {
                         </div>
 
                         {/* Price and Remove */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full">
                           <div className="text-right">
                             <div className="text-lg font-bold text-[#282828]">
                               {(item.price * item.quantity).toFixed(2)} TND
@@ -121,7 +126,8 @@ export default function CartPage() {
                           </div>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-500 hover:text-red-700"
+                            aria-label={`Remove ${item.productName} from cart`}
+                            className="p-2.5 sm:p-2 hover:bg-red-50 rounded-lg transition-colors text-red-500 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-200"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -146,7 +152,7 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 lg:sticky lg:top-8">
               <h2 className="text-xl font-bold text-[#282828] mb-6">Order Summary</h2>
               
               <div className="space-y-4">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { OrderItem, PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -23,15 +23,15 @@ export async function POST(request: NextRequest) {
     } = body
 
     console.log('Order items:', items)
-    console.log('Product IDs being ordered:', items.map((item: any) => item.productId))
+    console.log('Product IDs being ordered:', items.map((item: OrderItem) => item.productId))
 
-    // Verify all products exist
-    const productIds = items.map((item: any) => item.productId)
+    // Verify all products exist and validate stock
+    const productIds = items.map((item: OrderItem) => item.productId)
     const uniqueProductIds = [...new Set(productIds)] // Get unique product IDs
     const existingProducts = await prisma.product.findMany({
       where: {
         id: {
-          in: uniqueProductIds
+          in: uniqueProductIds as string[]
         }
       },
       select: {
@@ -44,15 +44,71 @@ export async function POST(request: NextRequest) {
     
     if (existingProducts.length !== uniqueProductIds.length) {
       const foundIds = existingProducts.map(p => p.id)
-      const missingIds = uniqueProductIds.filter(id => !foundIds.includes(id))
+      const missingIds = uniqueProductIds.filter(id => !foundIds.includes(id as string))
       console.log('Missing product IDs:', missingIds)
       return NextResponse.json(
         { 
           error: 'Some products not found',
-          missingProductIds: missingIds
+          missingProductIds: missingIds as string[]
         },
         { status: 400 }
       )
+    }
+
+    // Validate stock availability for each item
+    console.log('Validating stock for items...')
+    for (const item of items) {
+      if (item.variantId) {
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: item.variantId },
+          select: {
+            id: true,
+            quantity: true,
+            isActive: true,
+            color: { select: { colorName: true } },
+            size: { select: { name: true } }
+          }
+        })
+
+        if (!variant) {
+          return NextResponse.json(
+            { 
+              error: `Product variant not found for item`,
+              productId: item.productId,
+              variantId: item.variantId
+            },
+            { status: 400 }
+          )
+        }
+
+        if (!variant.isActive) {
+          return NextResponse.json(
+            { 
+              error: `Product variant is not active`,
+              productId: item.productId,
+              variantId: item.variantId,
+              variant: `${variant.color?.colorName || 'Unknown'} - ${variant.size?.name || 'Unknown'}`
+            },
+            { status: 400 }
+          )
+        }
+
+        if (variant.quantity < item.quantity) {
+          return NextResponse.json(
+            { 
+              error: `Insufficient stock available`,
+              productId: item.productId,
+              variantId: item.variantId,
+              variant: `${variant.color?.colorName || 'Unknown'} - ${variant.size?.name || 'Unknown'}`,
+              available: variant.quantity,
+              requested: item.quantity
+            },
+            { status: 400 }
+          )
+        }
+
+        console.log(`Stock validated for variant ${item.variantId}: ${variant.quantity} available, ${item.quantity} requested`)
+      }
     }
 
     // Create or find user
@@ -112,13 +168,13 @@ export async function POST(request: NextRequest) {
         paymentStatus: 'PENDING',
         paymentMethod: 'CASH_ON_DELIVERY',
         items: {
-          create: items.map((item: any) => ({
+          create: items.map((item: OrderItem) => ({
             productId: item.productId,
             variantId: item.variantId || null,
             quantity: item.quantity,
             price: item.price,
-            colorName: item.color || null,
-            sizeName: item.size || null
+            colorName: item.colorName || null,
+            sizeName: item.sizeName || null
           }))
         }
       },
@@ -145,7 +201,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/orders - Get all orders (admin)
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const orders = await prisma.order.findMany({
       include: {

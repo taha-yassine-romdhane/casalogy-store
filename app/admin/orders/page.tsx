@@ -18,6 +18,7 @@ interface OrderItem {
   }
   variant?: {
     id: string
+    quantity: number
     color: {
       colorName: string
       colorCode: string
@@ -374,6 +375,7 @@ export default function OrdersPage() {
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Product</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Variant</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Quantity</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Current Stock</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Price</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Total</th>
                         </tr>
@@ -385,23 +387,58 @@ export default function OrdersPage() {
                               <div className="font-medium text-gray-900">{item.product.name}</div>
                             </td>
                             <td className="px-4 py-3">
-                              {item.colorName || item.sizeName ? (
-                                <div className="text-sm text-gray-800">
-                                  {item.colorName && (
+                              <div className="text-sm text-gray-800">
+                                {/* Show variant info if available */}
+                                {item.variant ? (
+                                  <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-4 h-4 rounded border bg-gray-300" />
-                                      <span>{item.colorName}</span>
+                                      <div
+                                        className="w-4 h-4 rounded border border-gray-300"
+                                        style={{ backgroundColor: item.variant.color.colorCode }}
+                                        title={item.variant.color.colorName}
+                                      />
+                                      <span>{item.variant.color.colorName}</span>
                                     </div>
-                                  )}
-                                  {item.sizeName && (
-                                    <div className="text-gray-700">Size: {item.sizeName}</div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-gray-800">Default</span>
-                              )}
+                                    <div className="text-gray-700">Size: {item.variant.size.name}</div>
+                                  </div>
+                                ) : (
+                                  /* Fallback to colorName/sizeName from order item */
+                                  <div className="space-y-1">
+                                    {item.colorName && (
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded border bg-gray-300" />
+                                        <span>{item.colorName}</span>
+                                      </div>
+                                    )}
+                                    {item.sizeName && (
+                                      <div className="text-gray-700">Size: {item.sizeName}</div>
+                                    )}
+                                    {!item.colorName && !item.sizeName && (
+                                      <span className="text-red-500 text-xs">⚠️ No variant data</span>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Show variant ID for debugging */}
+                                {item.variantId && (
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    ID: {item.variantId.slice(-8)}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-gray-800">{item.quantity}</td>
+                            <td className="px-4 py-3">
+                              {item.variant ? (
+                                <div className="text-sm">
+                                  <span className={`font-medium ${item.variant.quantity < 10 ? 'text-red-600' : item.variant.quantity < 20 ? 'text-orange-600' : 'text-green-600'}`}>
+                                    {item.variant.quantity}
+                                  </span>
+                                  <span className="text-gray-500 ml-1">in stock</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No variant</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-gray-800">{formatPrice(item.price)}</td>
                             <td className="px-4 py-3 font-medium text-gray-900">{formatPrice(item.quantity * parseFloat(item.price.toString()))}</td>
                           </tr>

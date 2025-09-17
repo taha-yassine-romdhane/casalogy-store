@@ -142,13 +142,79 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setIsLoading(true)
-    
+
     try {
-      // Prepare order data (shipping is handled externally, so we only save subtotal)
+      // Resolve variantIds for all cart items
+      const itemsWithVariantIds = await Promise.all(
+        items.map(async (item) => {
+          try {
+            // Find the variant ID based on product, color, and size
+            const response = await fetch(`/api/products/${item.productSlug}`)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch product details for ${item.productSlug}`)
+            }
+
+            const productData = await response.json()
+            const product = productData.product || productData // Handle both wrapped and unwrapped responses
+
+            console.log(`🔍 Looking for variant: ${item.productName} - ${item.color} - ${item.size}`)
+            console.log(`📋 Available colors:`, product.colorVariants?.map((cv: any) => cv.colorName) || 'None')
+
+            // Find the variant that matches the color and size
+            let variant = null
+
+            // Search through colorVariants structure
+            for (const colorVariant of product.colorVariants || []) {
+              if (colorVariant.colorName === item.color) {
+                console.log(`✅ Found matching color: ${colorVariant.colorName}`)
+                console.log(`📏 Available sizes:`, colorVariant.sizes?.map((s: any) => s.sizeName) || 'None')
+
+                // Found matching color, now find matching size
+                const sizeVariant = colorVariant.sizes?.find((s: any) =>
+                  s.sizeName === item.size
+                )
+                if (sizeVariant) {
+                  variant = sizeVariant
+                  console.log(`✅ Found matching variant:`, { id: variant.id, size: variant.sizeName, quantity: variant.quantity })
+                  break
+                } else {
+                  console.log(`❌ Size '${item.size}' not found in available sizes`)
+                }
+              }
+            }
+
+            if (!variant) {
+              throw new Error(`Variant not found for ${item.productName} - ${item.color} - ${item.size}`)
+            }
+
+            return {
+              productId: item.productId,
+              variantId: variant.id, // This should be the size variant ID
+              quantity: item.quantity,
+              price: item.price,
+              colorName: item.color,
+              sizeName: item.size
+            }
+          } catch (error) {
+            console.error(`Error resolving variant for item:`, item, error)
+            // Fallback: create order item without variantId
+            return {
+              productId: item.productId,
+              variantId: null,
+              quantity: item.quantity,
+              price: item.price,
+              colorName: item.color,
+              sizeName: item.size
+            }
+          }
+        })
+      )
+
+      // Prepare order data
       const orderData = {
         orderNumber,
         email: form.email || null,
@@ -158,19 +224,14 @@ export default function CheckoutPage() {
         address: form.address,
         city: form.city,
         governorate: form.governorate,
-        items: items.map(item => ({
-          productId: item.productId,
-          variantId: null, // For now, we'll handle variants separately or make them optional
-          quantity: item.quantity,
-          price: item.price,
-          color: item.color,
-          size: item.size
-        })),
+        items: itemsWithVariantIds,
         subtotal: totalAmount,
         shippingCost: 0, // Shipping is external service, not included in order
         total: totalAmount // Only product total, shipping handled separately
       }
-      
+
+      console.log('Order data with variants:', orderData)
+
       // Save order to database
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -179,14 +240,15 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify(orderData)
       })
-      
+
       if (response.ok) {
         // Clear cart and show success dialog
         clearCart()
         setShowSuccess(true)
       } else {
-        console.error('Failed to create order')
-        alert('Failed to create order. Please try again.')
+        const errorData = await response.json()
+        console.error('Failed to create order:', errorData)
+        alert(`Failed to create order: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Checkout error:', error)
