@@ -17,6 +17,7 @@ import {
   Check
 } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
+import { trackViewContent } from '@/lib/facebook-pixel'
 
 interface ProductImage {
   id: string
@@ -131,7 +132,18 @@ export default function ProductPage() {
       
       const data = await response.json()
       setProduct(data.product)
-      
+
+      // Track ViewContent event with Facebook Pixel
+      if (data.product) {
+        trackViewContent({
+          name: data.product.name,
+          category: data.product.category?.name,
+          id: data.product.id,
+          price: data.product.price,
+          currency: 'TND'
+        })
+      }
+
       // Reset selections when product loads
       setSelectedColorIndex(0)
       setSelectedImageIndex(0)

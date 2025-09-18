@@ -6,6 +6,7 @@ import { useCart } from '@/contexts/cart-context'
 import { useAuth } from '@/contexts/auth-context'
 import { ShoppingBag, CreditCard, Truck, ArrowLeft, Lock, MapPin, User, Mail, Phone, CheckCircle, Copy, Home } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { trackInitiateCheckout, trackPurchase } from '@/lib/facebook-pixel'
 
 interface CheckoutForm {
   email: string
@@ -69,8 +70,20 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (items.length === 0 && !showSuccess) {
       router.push('/cart')
+    } else if (items.length > 0) {
+      // Track InitiateCheckout when user reaches checkout page
+      trackInitiateCheckout({
+        value: finalTotal,
+        currency: 'TND',
+        items: items.map(item => ({
+          id: item.productId,
+          name: item.productName,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      })
     }
-  }, [items.length, router, showSuccess])
+  }, [items.length, router, showSuccess, finalTotal, items])
 
   // Fetch user data and address when logged in
   useEffect(() => {
@@ -242,6 +255,20 @@ export default function CheckoutPage() {
       })
 
       if (response.ok) {
+        // Track Purchase event with Facebook Pixel
+        trackPurchase({
+          orderId: orderNumber,
+          value: totalAmount,
+          currency: 'TND',
+          items: items.map(item => ({
+            id: item.productId,
+            name: item.productName,
+            category: '', // Add category if available
+            quantity: item.quantity,
+            price: item.price
+          }))
+        })
+
         // Clear cart and show success dialog
         clearCart()
         setShowSuccess(true)

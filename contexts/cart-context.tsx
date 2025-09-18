@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { trackAddToCart } from '@/lib/facebook-pixel'
 
 export interface CartItem {
   id: string
@@ -68,8 +69,8 @@ export function CartProvider({ children }: CartProviderProps) {
 
   const addItem = (newItem: Omit<CartItem, 'id'>) => {
     const existingItemIndex = items.findIndex(
-      item => item.productId === newItem.productId && 
-               item.color === newItem.color && 
+      item => item.productId === newItem.productId &&
+               item.color === newItem.color &&
                item.size === newItem.size
     )
 
@@ -91,7 +92,15 @@ export function CartProvider({ children }: CartProviderProps) {
       }
       setItems(prev => [...prev, cartItem])
     }
-    
+
+    // Track AddToCart event with Facebook Pixel
+    trackAddToCart({
+      name: newItem.productName,
+      id: newItem.productId,
+      price: newItem.price,
+      currency: 'TND'
+    })
+
     // Open cart dropdown briefly to show feedback
     setIsOpen(true)
   }

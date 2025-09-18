@@ -5,6 +5,7 @@ import "./globals.css";
 import { ConditionalLayout } from "@/components/conditional-layout";
 import { CartProvider } from "@/contexts/cart-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import FacebookPixel from "@/components/facebook-pixel";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -62,6 +63,7 @@ export default function RootLayout({
         {/* End Meta Pixel Code */}
       </head>
       <body className={`${inter.className} antialiased`}>
+        <FacebookPixel />
         <AuthProvider>
           <CartProvider>
             <ConditionalLayout>
