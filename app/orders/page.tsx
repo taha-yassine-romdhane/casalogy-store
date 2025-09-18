@@ -3,7 +3,8 @@
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Package, Calendar, Truck, CheckCircle, Clock, Eye, Hash, ShoppingBag, MapPin, Image } from "lucide-react"
+import { Package, Calendar, Truck, CheckCircle, Clock, Eye, Hash, ShoppingBag, MapPin } from "lucide-react"
+import Image from "next/image"
 
 interface OrderItem {
   id: string
@@ -145,7 +146,7 @@ export default function OrdersPage() {
     return `${numericPrice.toFixed(2)} TND`
   }
 
-  const getProductMainImage = (product: any) => {
+  const getProductMainImage = (product: OrderItem['product']) => {
     // Get the main image from the first color's images
     if (product.colors && product.colors.length > 0) {
       const firstColor = product.colors[0]
@@ -180,7 +181,7 @@ export default function OrdersPage() {
               <Package className="mx-auto h-24 w-24 text-gray-400 mb-6" />
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">No orders yet</h2>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                You haven't placed any orders yet. Start shopping to see your order history here.
+                You haven&apos;t placed any orders yet. Start shopping to see your order history here.
               </p>
               <button
                 onClick={() => router.push('/')}
@@ -231,6 +232,8 @@ export default function OrdersPage() {
                             <Image
                               src={getProductMainImage(item.product)}
                               alt={item.product.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -355,9 +358,11 @@ export default function OrdersPage() {
                     {selectedOrder.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
-                          <img
+                          <Image
                             src={getProductMainImage(item.product)}
                             alt={item.product.name}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
                           />
                         </div>
