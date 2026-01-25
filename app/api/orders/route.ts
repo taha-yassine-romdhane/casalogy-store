@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { OrderItem, PrismaClient } from '@prisma/client'
+import { OrderItem } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
 
 // POST /api/orders - Create new order
 export async function POST(request: NextRequest) {

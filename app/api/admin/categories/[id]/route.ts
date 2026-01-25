@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 
-const prisma = new PrismaClient()
 
 // DELETE /api/admin/categories/[id] - Delete category
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Package, Eye, Truck, CheckCircle, Clock, X, User, Phone, MapPin, ShoppingBag, Calendar, Hash, Trash2, Edit, AlertTriangle } from 'lucide-react'
+import { Package, Eye, Truck, CheckCircle, Clock, X, User, Phone, MapPin, ShoppingBag, Calendar, Hash, Trash2, Edit, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -86,6 +86,7 @@ export default function OrdersPage() {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [updating, setUpdating] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -179,14 +180,59 @@ export default function OrdersPage() {
     }
   }
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true)
+      const response = await fetch('/api/admin/orders/export')
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `orders-export-${new Date().toISOString().split('T')[0]}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert('Failed to export orders')
+      }
+    } catch (error) {
+      console.error('Error exporting orders:', error)
+      alert('Error exporting orders')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Package className="w-6 h-6" />
-          Orders ({orders.length})
-        </h1>
-        <p className="text-gray-600">View and manage customer orders</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Package className="w-6 h-6" />
+            Orders ({orders.length})
+          </h1>
+          <p className="text-gray-600">View and manage customer orders</p>
+        </div>
+        <button
+          onClick={handleExportExcel}
+          disabled={exporting || orders.length === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {exporting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              Exporting...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="w-4 h-4" />
+              Export Excel
+            </>
+          )}
+        </button>
       </div>
 
       {loading ? (

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
 
 // PUT /api/user/change-password - Change user password
 export async function PUT(request: NextRequest) {
@@ -77,6 +76,5 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }

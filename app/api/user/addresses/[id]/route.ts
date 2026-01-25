@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 
-const prisma = new PrismaClient()
 
 // PUT /api/user/addresses/[id] - Update address
 export async function PUT(
@@ -85,7 +84,6 @@ export async function PUT(
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }
 
@@ -139,6 +137,5 @@ export async function DELETE(
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
   }
 }

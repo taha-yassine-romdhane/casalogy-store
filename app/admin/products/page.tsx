@@ -77,6 +77,16 @@ export default function ProductsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteWarning, setDeleteWarning] = useState<{
+    productId: string
+    productName: string
+    relations: {
+      orderItems: number
+      cartItems: number
+      reviews: number
+      variants: number
+    }
+  } | null>(null)
   
   // Product form state
   const [productColors, setProductColors] = useState<Color[]>([])
@@ -122,18 +132,57 @@ export default function ProductsPage() {
     }
   }
 
-  // Delete product
+  // Delete product - first check for relations
   const handleDelete = async (productId: string) => {
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE'
       })
-      if (response.ok) {
+      const data = await response.json()
+
+      if (data.warning) {
+        // Show warning modal with relations
+        setDeleteWarning({
+          productId,
+          productName: data.productName,
+          relations: data.relations
+        })
+        setDeleteConfirm(null)
+      } else if (data.success) {
         setProducts(products.filter(p => p.id !== productId))
+        setDeleteConfirm(null)
+      } else {
+        alert(data.error || 'Failed to delete product')
         setDeleteConfirm(null)
       }
     } catch (error) {
       console.error('Failed to delete product:', error)
+      alert('Failed to delete product')
+      setDeleteConfirm(null)
+    }
+  }
+
+  // Confirm delete with cascade
+  const handleConfirmDelete = async () => {
+    if (!deleteWarning) return
+
+    try {
+      const response = await fetch(`/api/admin/products/${deleteWarning.productId}?confirm=true`, {
+        method: 'DELETE'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        setProducts(products.filter(p => p.id !== deleteWarning.productId))
+        setDeleteWarning(null)
+      } else {
+        alert(data.error || 'Failed to delete product')
+        setDeleteWarning(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete product:', error)
+      alert('Failed to delete product')
+      setDeleteWarning(null)
     }
   }
 
@@ -703,6 +752,72 @@ export default function ProductsPage() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Warning Modal - Shows related data */}
+      {deleteWarning && (
+        <div className="fixed inset-0 bg-gray-900/75 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-lg w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">Warning: Related Data Found</h3>
+            </div>
+
+            <p className="text-gray-700 mb-4">
+              You are about to delete <strong>{deleteWarning.productName}</strong>. This product has the following related data that will also be <span className="text-red-600 font-semibold">permanently deleted</span>:
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
+              {deleteWarning.relations.orderItems > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Order Items:</span>
+                  <span className="font-medium text-red-600">{deleteWarning.relations.orderItems} item(s)</span>
+                </div>
+              )}
+              {deleteWarning.relations.cartItems > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Cart Items:</span>
+                  <span className="font-medium text-orange-600">{deleteWarning.relations.cartItems} item(s)</span>
+                </div>
+              )}
+              {deleteWarning.relations.reviews > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Reviews:</span>
+                  <span className="font-medium text-orange-600">{deleteWarning.relations.reviews} review(s)</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Product Variants:</span>
+                <span className="font-medium text-gray-800">{deleteWarning.relations.variants} variant(s)</span>
+              </div>
+            </div>
+
+            {deleteWarning.relations.orderItems > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-700">
+                  <strong>Important:</strong> Deleting order items will affect order history and customer records. This cannot be undone.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setDeleteWarning(null)}
+                className="px-4 py-2 text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Delete Everything
               </button>
             </div>
           </div>

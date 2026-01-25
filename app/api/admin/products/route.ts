@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 
-const prisma = new PrismaClient()
 
 // GET /api/admin/products - List all products
 export async function GET(request: NextRequest) {
@@ -98,7 +97,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       products: productsWithStock,
       pagination: {
         page,
@@ -107,6 +106,9 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit)
       }
     })
+    // Prevent caching to ensure fresh data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

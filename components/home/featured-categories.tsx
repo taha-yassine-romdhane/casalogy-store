@@ -182,7 +182,7 @@ export function FeaturedCategories() {
           {categories.map((category, index) => (
             <Link
               key={category.id}
-              href={`/${category.category.slug}`}
+              href={`/category/${category.category.slug}`}
               className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <div className="aspect-[3/4] relative overflow-hidden transition-transform duration-300 group-hover:scale-[1.02]">

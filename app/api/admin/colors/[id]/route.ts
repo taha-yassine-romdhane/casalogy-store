@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 
-const prisma = new PrismaClient()
 
 // PUT /api/admin/colors/[id] - Update color
 export async function PUT(

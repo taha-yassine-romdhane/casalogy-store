@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Next.js Application
   app:
@@ -7,16 +5,17 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: casalogy-app
+    env_file:
+      - .env
     environment:
-      NODE_ENV: production
-      # Connect to PostgreSQL running on the host machine  
-      DATABASE_URL: postgresql://postgres:admin@172.17.0.1:5432/casalogy_db
-      NEXTAUTH_URL: https://casalogystore.com
-      NEXTAUTH_SECRET: your-super-secret-nextauth-key-change-this-in-production
-      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
-      UPLOAD_DIR: /app/public/uploads
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      UPLOAD_DIR: ${UPLOAD_DIR}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     # Allow container to access host PostgreSQL
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -27,7 +26,7 @@ services:
       - ./public/uploads:/app/public/uploads:rw
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

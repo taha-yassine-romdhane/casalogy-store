@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { verifyTokenEdge } from '@/lib/auth'
 
-const prisma = new PrismaClient()
 
 // GET /api/admin/products/[id] - Get single product
 export async function GET(
@@ -270,21 +269,52 @@ export async function DELETE(
     }
 
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const confirm = searchParams.get('confirm') === 'true'
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
-      where: { id }
+      where: { id },
+      select: { id: true, name: true }
     })
     if (!existingProduct) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    // Delete product (cascade will handle variants, images, etc.)
+    // Get all related data counts
+    const [orderItemsCount, cartItemsCount, reviewsCount, variantsCount] = await Promise.all([
+      prisma.orderItem.count({ where: { productId: id } }),
+      prisma.cartItem.count({ where: { productId: id } }),
+      prisma.review.count({ where: { productId: id } }),
+      prisma.productVariant.count({ where: { productId: id } })
+    ])
+
+    const hasRelations = orderItemsCount > 0 || cartItemsCount > 0 || reviewsCount > 0
+
+    // If there are relations and not confirmed, return warning
+    if (hasRelations && !confirm) {
+      return NextResponse.json({
+        warning: true,
+        productName: existingProduct.name,
+        relations: {
+          orderItems: orderItemsCount,
+          cartItems: cartItemsCount,
+          reviews: reviewsCount,
+          variants: variantsCount
+        },
+        message: 'This product has related data that will be permanently deleted.'
+      }, { status: 200 })
+    }
+
+    // Delete product (cascade will handle variants, images, order items, cart items, reviews)
     await prisma.product.delete({
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Product deleted successfully' })
+    return NextResponse.json({
+      success: true,
+      message: 'Product and all related data deleted successfully'
+    })
   } catch (error) {
     console.error('Error deleting product:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

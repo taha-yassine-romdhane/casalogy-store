@@ -175,7 +175,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
 
                     {user.role === 'ADMIN' && (
                       <Link
-                        href="/admin"
+                        href="/admin/dashboard"
                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
@@ -342,7 +342,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
               My Orders
             </Link>
             {user.role === 'ADMIN' && (
-              <Link href="/admin" className="flex items-center py-3 text-[#282828]" onClick={handleLinkClick}>
+              <Link href="/admin/dashboard" className="flex items-center py-3 text-[#282828]" onClick={handleLinkClick}>
                 <Settings className="w-5 h-5 mr-3" />
                 Admin Dashboard
               </Link>
