@@ -14,6 +14,7 @@ export interface CartItem {
   quantity: number
   image?: string
   maxQuantity: number
+  customization?: string // Customer's personalization request (logo, modifications, etc.)
 }
 
 interface CartContextType {
@@ -23,6 +24,7 @@ interface CartContextType {
   addItem: (item: Omit<CartItem, 'id'>) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
+  updateCustomization: (id: string, customization: string) => void
   clearCart: () => void
   isOpen: boolean
   openCart: () => void
@@ -68,11 +70,16 @@ export function CartProvider({ children }: CartProviderProps) {
   const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   const addItem = (newItem: Omit<CartItem, 'id'>) => {
-    const existingItemIndex = items.findIndex(
-      item => item.productId === newItem.productId &&
-               item.color === newItem.color &&
-               item.size === newItem.size
-    )
+    // Items with customization are always unique
+    // Items without customization can be merged
+    const existingItemIndex = !newItem.customization
+      ? items.findIndex(
+          item => item.productId === newItem.productId &&
+                  item.color === newItem.color &&
+                  item.size === newItem.size &&
+                  !item.customization
+        )
+      : -1
 
     if (existingItemIndex > -1) {
       // Update quantity of existing item
@@ -131,6 +138,18 @@ export function CartProvider({ children }: CartProviderProps) {
     setIsOpen(false)
   }
 
+  const updateCustomization = (id: string, customization: string) => {
+    setItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          customization: customization || undefined
+        }
+      }
+      return item
+    }))
+  }
+
   const openCart = () => setIsOpen(true)
   const closeCart = () => setIsOpen(false)
 
@@ -141,6 +160,7 @@ export function CartProvider({ children }: CartProviderProps) {
     addItem,
     removeItem,
     updateQuantity,
+    updateCustomization,
     clearCart,
     isOpen,
     openCart,

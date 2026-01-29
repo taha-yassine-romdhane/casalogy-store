@@ -276,36 +276,41 @@ model Order {
   orderNumber   String      @unique
   userId        String
   addressId     String
-  
+
   // Order totals
   subtotal      Decimal     @db.Decimal(10, 2)
   shippingCost  Decimal     @db.Decimal(10, 2) @default(0)
   taxAmount     Decimal     @db.Decimal(10, 2) @default(0)
   discountAmount Decimal    @db.Decimal(10, 2) @default(0)
   total         Decimal     @db.Decimal(10, 2)
-  
+
   // Order status
   status        OrderStatus @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING)
   paymentMethod String?
-  
+
   // Tracking
   trackingNumber String?
-  
+
   // Student discount
   studentDiscount Boolean   @default(false)
-  
+
+  // Promo code
+  promoCodeId   String?
+  promoCode     PromoCode?  @relation(fields: [promoCodeId], references: [id])
+  promoCodeUsed String?     // Store the actual code used
+
   // Notes
   notes         String?
-  
+
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  
+
   // Relations
   user          User        @relation(fields: [userId], references: [id])
   address       Address     @relation(fields: [addressId], references: [id])
   items         OrderItem[]
-  
+
   @@map("orders")
 }
 
@@ -320,6 +325,9 @@ model OrderItem {
   // Store ordered color/size for reference (in case variants change later)
   colorName String?
   sizeName  String?
+
+  // Customization request from customer (logo, personalization, etc.)
+  customization String?
 
   // Relations
   order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -498,8 +506,38 @@ model AboutFeature {
   title       String
   description String
   sortOrder   Int       @default(0)
-  
+
   section     AboutSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  
+
   @@map("about_features")
+}
+
+// Promo Code Management
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  description     String?
+  discountType    DiscountType @default(PERCENTAGE)
+  discountValue   Decimal   @db.Decimal(10, 2) // Percentage (0-100) or fixed amount
+  minOrderAmount  Decimal?  @db.Decimal(10, 2) // Minimum order amount to apply
+  maxDiscount     Decimal?  @db.Decimal(10, 2) // Maximum discount amount (for percentage discounts)
+  usageLimit      Int?      // Total number of times code can be used
+  usageCount      Int       @default(0) // Current usage count
+  perUserLimit    Int?      // Times each user can use this code
+  startDate       DateTime?
+  endDate         DateTime?
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  orders          Order[]
+
+  @@map("promo_codes")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
 }

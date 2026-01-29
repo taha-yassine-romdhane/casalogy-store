@@ -1,12 +1,15 @@
 "use client"
 
+import { useState } from 'react'
 import { useCart } from '@/contexts/cart-context'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag, Truck } from 'lucide-react'
+import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag, Truck, Pencil, X, Check } from 'lucide-react'
 
 export default function CartPage() {
-  const { items, itemCount, totalAmount, updateQuantity, removeItem, clearCart } = useCart()
+  const { items, itemCount, totalAmount, updateQuantity, updateCustomization, removeItem, clearCart } = useCart()
+  const [editingCustomization, setEditingCustomization] = useState<string | null>(null)
+  const [customizationText, setCustomizationText] = useState('')
 
   const shippingCost = totalAmount >= 200 ? 0 : 8
   const finalTotal = totalAmount + shippingCost
@@ -86,6 +89,87 @@ export default function CartPage() {
                         <span>Color: <span className="font-medium text-gray-800">{item.color}</span></span>
                         <span>Size: <span className="font-medium text-gray-800">{item.size}</span></span>
                       </div>
+
+                      {/* Customization Display/Edit */}
+                      {item.customization || editingCustomization === item.id ? (
+                        <div className="mt-3">
+                          {editingCustomization === item.id ? (
+                            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Pencil className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-700">Edit Personalization</span>
+                              </div>
+                              <textarea
+                                value={customizationText}
+                                onChange={(e) => setCustomizationText(e.target.value)}
+                                placeholder="Describe your customization..."
+                                rows={2}
+                                maxLength={500}
+                                className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                              />
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs text-gray-500">{customizationText.length}/500</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingCustomization(null)
+                                      setCustomizationText('')
+                                    }}
+                                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1"
+                                  >
+                                    <X className="w-4 h-4" />
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      updateCustomization(item.id, customizationText)
+                                      setEditingCustomization(null)
+                                      setCustomizationText('')
+                                    }}
+                                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 flex-1">
+                                  <Pencil className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="text-xs font-medium text-blue-700 block mb-1">Personalization:</span>
+                                    <p className="text-sm text-blue-800">{item.customization}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setEditingCustomization(item.id)
+                                    setCustomizationText(item.customization || '')
+                                  }}
+                                  className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
+                                  title="Edit customization"
+                                >
+                                  <Pencil className="w-4 h-4 text-blue-600" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditingCustomization(item.id)
+                            setCustomizationText('')
+                          }}
+                          className="mt-3 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          Add personalization
+                        </button>
+                      )}
 
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
                         {/* Quantity Controls */}

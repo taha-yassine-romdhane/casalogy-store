@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
       items,
       subtotal,
       shippingCost,
-      total
+      discountAmount,
+      total,
+      promoCodeId,
+      promoCodeUsed
     } = body
 
     console.log('Order items:', items)
@@ -163,18 +166,22 @@ export async function POST(request: NextRequest) {
         addressId: shippingAddress.id,
         subtotal,
         shippingCost: shippingCost || 0,
+        discountAmount: discountAmount || 0,
         total,
         status: 'PENDING',
         paymentStatus: 'PENDING',
         paymentMethod: 'CASH_ON_DELIVERY',
+        promoCodeId: promoCodeId || null,
+        promoCodeUsed: promoCodeUsed || null,
         items: {
-          create: items.map((item: OrderItem) => ({
+          create: items.map((item: any) => ({
             productId: item.productId,
             variantId: item.variantId || null,
             quantity: item.quantity,
             price: item.price,
             colorName: item.colorName || null,
-            sizeName: item.sizeName || null
+            sizeName: item.sizeName || null,
+            customization: item.customization || null
           }))
         }
       },
@@ -185,6 +192,19 @@ export async function POST(request: NextRequest) {
       }
     })
     console.log('Created order with ID:', order.id)
+
+    // Update promo code usage count if used
+    if (promoCodeId) {
+      await prisma.promoCode.update({
+        where: { id: promoCodeId },
+        data: {
+          usageCount: {
+            increment: 1
+          }
+        }
+      })
+      console.log('Updated promo code usage count')
+    }
 
     return NextResponse.json(order)
   } catch (error) {
@@ -207,6 +227,14 @@ export async function GET() {
       include: {
         user: true,
         address: true,
+        promoCode: {
+          select: {
+            id: true,
+            code: true,
+            discountType: true,
+            discountValue: true
+          }
+        },
         items: {
           include: {
             product: true,

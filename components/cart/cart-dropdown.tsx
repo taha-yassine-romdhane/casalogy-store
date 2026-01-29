@@ -2,7 +2,7 @@
 
 import { useCart } from '@/contexts/cart-context'
 import Link from 'next/link'
-import { Plus, Minus, Trash2, X, ShoppingBag } from 'lucide-react'
+import { Plus, Minus, Trash2, X, ShoppingBag, Pencil } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 interface CartDropdownProps {
@@ -156,6 +156,12 @@ export default function CartDropdown({ isOpen, onClose }: CartDropdownProps) {
                         {item.color && item.size && <span className="mx-1">•</span>}
                         <span>{item.size}</span>
                       </div>
+                      {item.customization && (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-blue-600">
+                          <Pencil className="w-3 h-3" />
+                          <span className="truncate max-w-[120px]">Customized</span>
+                        </div>
+                      )}
                       <div className="text-sm font-semibold text-gray-900 mt-1">
                         {item.price} TND
                       </div>
@@ -314,6 +320,12 @@ export default function CartDropdown({ isOpen, onClose }: CartDropdownProps) {
                       {item.color && item.size && <span className="mx-1">•</span>}
                       <span>{item.size}</span>
                     </div>
+                    {item.customization && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-blue-600">
+                        <Pencil className="w-3 h-3" />
+                        <span className="truncate max-w-[120px]">Customized</span>
+                      </div>
+                    )}
                     <div className="text-sm font-semibold text-gray-900 mt-1">
                       {item.price} TND
                     </div>

@@ -137,6 +137,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       include: {
         user: true,
         address: true,
+        promoCode: {
+          select: {
+            id: true,
+            code: true,
+            discountType: true,
+            discountValue: true
+          }
+        },
         items: {
           include: {
             product: true,

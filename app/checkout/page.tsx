@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
 import { useAuth } from '@/contexts/auth-context'
-import { ShoppingBag, CreditCard, Truck, ArrowLeft, Lock, MapPin, User, Mail, Phone, CheckCircle, Copy, Home } from 'lucide-react'
+import { ShoppingBag, CreditCard, Truck, ArrowLeft, Lock, MapPin, User, Mail, Phone, CheckCircle, Copy, Home, Ticket, X, Loader2, Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { trackInitiateCheckout, trackPurchase } from '@/lib/facebook-pixel'
 
@@ -44,8 +44,23 @@ export default function CheckoutPage() {
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
 
-  const shippingCost = totalAmount >= 200 ? 0 : 8
-  const finalTotal = totalAmount + shippingCost
+const shippingCost = totalAmount >= 200 ? 0 : 8
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('')
+  const [promoCodeInput, setPromoCodeInput] = useState('')
+  const [promoCodeLoading, setPromoCodeLoading] = useState(false)
+  const [promoCodeError, setPromoCodeError] = useState('')
+  const [appliedPromo, setAppliedPromo] = useState<{
+    id: string
+    code: string
+    discountType: string
+    discountValue: number
+    description?: string
+  } | null>(null)
+  const [discountAmount, setDiscountAmount] = useState(0)
+
+  const finalTotal = totalAmount - discountAmount + shippingCost
 
   const [showSuccess, setShowSuccess] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -120,6 +135,51 @@ export default function CheckoutPage() {
     } catch (error) {
       console.error('Error fetching user address:', error)
     }
+  }
+
+  const applyPromoCode = async () => {
+    if (!promoCodeInput.trim()) {
+      setPromoCodeError('Please enter a promo code')
+      return
+    }
+
+    setPromoCodeLoading(true)
+    setPromoCodeError('')
+
+    try {
+      const response = await fetch('/api/promo-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCodeInput.trim().toUpperCase(),
+          subtotal: totalAmount,
+          userId: user?.id
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setAppliedPromo(data.promoCode)
+        setDiscountAmount(data.discountAmount)
+        setPromoCode(data.promoCode.code)
+        setPromoCodeInput('')
+      } else {
+        setPromoCodeError(data.error || 'Invalid promo code')
+      }
+    } catch (error) {
+      console.error('Error validating promo code:', error)
+      setPromoCodeError('Failed to validate promo code')
+    } finally {
+      setPromoCodeLoading(false)
+    }
+  }
+
+  const removePromoCode = () => {
+    setAppliedPromo(null)
+    setDiscountAmount(0)
+    setPromoCode('')
+    setPromoCodeError('')
   }
 
   const validateForm = (): boolean => {
@@ -210,7 +270,8 @@ export default function CheckoutPage() {
               quantity: item.quantity,
               price: item.price,
               colorName: item.color,
-              sizeName: item.size
+              sizeName: item.size,
+              customization: item.customization || null
             }
           } catch (error) {
             console.error(`Error resolving variant for item:`, item, error)
@@ -221,7 +282,8 @@ export default function CheckoutPage() {
               quantity: item.quantity,
               price: item.price,
               colorName: item.color,
-              sizeName: item.size
+              sizeName: item.size,
+              customization: item.customization || null
             }
           }
         })
@@ -240,7 +302,10 @@ export default function CheckoutPage() {
         items: itemsWithVariantIds,
         subtotal: totalAmount,
         shippingCost: 0, // Shipping is external service, not included in order
-        total: totalAmount // Only product total, shipping handled separately
+        discountAmount: discountAmount,
+        total: totalAmount - discountAmount, // Product total minus discount
+        promoCodeId: appliedPromo?.id || null,
+        promoCodeUsed: appliedPromo?.code || null
       }
 
       console.log('Order data with variants:', orderData)
@@ -258,7 +323,7 @@ export default function CheckoutPage() {
         // Track Purchase event with Facebook Pixel
         trackPurchase({
           orderId: orderNumber,
-          value: totalAmount,
+          value: totalAmount - discountAmount, // Track actual paid amount
           currency: 'TND',
           items: items.map(item => ({
             id: item.productId,
@@ -576,7 +641,7 @@ export default function CheckoutPage() {
                         <ShoppingBag className="w-8 h-8 text-gray-400" />
                       )}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-[#282828] text-sm line-clamp-2">
                         {item.productName}
@@ -584,6 +649,14 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-700 mt-1">
                         {item.color} • {item.size} • Qty: {item.quantity}
                       </p>
+                      {item.customization && (
+                        <div className="flex items-start gap-1 mt-1 bg-blue-50 rounded p-1.5">
+                          <Pencil className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-blue-700 line-clamp-2">
+                            {item.customization}
+                          </p>
+                        </div>
+                      )}
                       <p className="font-semibold text-[#282828] mt-1">
                         {(item.price * item.quantity).toFixed(2)} TND
                       </p>
@@ -592,13 +665,83 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Promo Code */}
+              <div className="mb-6 border-t border-gray-200 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Ticket className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-[#282828]">Promo Code</span>
+                </div>
+
+                {appliedPromo ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-mono font-semibold text-green-700">{appliedPromo.code}</p>
+                        <p className="text-xs text-green-600 mt-0.5">
+                          {appliedPromo.discountType === 'PERCENTAGE'
+                            ? `${appliedPromo.discountValue}% off`
+                            : `${appliedPromo.discountValue} TND off`}
+                          {appliedPromo.description && ` - ${appliedPromo.description}`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={removePromoCode}
+                        className="p-1 hover:bg-green-100 rounded transition-colors"
+                        title="Remove promo code"
+                      >
+                        <X className="w-4 h-4 text-green-700" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCodeInput}
+                        onChange={(e) => {
+                          setPromoCodeInput(e.target.value.toUpperCase())
+                          setPromoCodeError('')
+                        }}
+                        placeholder="Enter code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#282828] font-mono"
+                      />
+                      <button
+                        onClick={applyPromoCode}
+                        disabled={promoCodeLoading || !promoCodeInput.trim()}
+                        className="px-4 py-2 bg-[#282828] text-white text-sm rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {promoCodeLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Apply'
+                        )}
+                      </button>
+                    </div>
+                    {promoCodeError && (
+                      <p className="text-xs text-red-600">{promoCodeError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Pricing */}
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#282828] font-medium">Subtotal ({itemCount} items)</span>
                   <span className="font-semibold text-[#282828]">{totalAmount.toFixed(2)} TND</span>
                 </div>
-                
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 font-medium flex items-center">
+                      <Ticket className="w-4 h-4 mr-1" />
+                      Discount ({appliedPromo?.code})
+                    </span>
+                    <span className="font-semibold text-green-600">-{discountAmount.toFixed(2)} TND</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-sm">
                   <span className="text-[#282828] font-medium flex items-center">
                     <Truck className="w-4 h-4 mr-1" />
@@ -608,7 +751,7 @@ export default function CheckoutPage() {
                     {shippingCost === 0 ? 'Free' : `${shippingCost.toFixed(2)} TND`}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between text-lg font-bold text-[#282828] pt-2 border-t border-gray-200">
                   <span>Total</span>
                   <span>{finalTotal.toFixed(2)} TND</span>

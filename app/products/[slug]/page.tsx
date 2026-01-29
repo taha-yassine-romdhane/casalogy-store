@@ -2,19 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { 
-  Star, 
-  Heart, 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  Truck, 
-  Shield, 
-  RotateCcw, 
+import {
+  Star,
+  Heart,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Truck,
+  Shield,
+  RotateCcw,
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Check
+  Check,
+  Pencil,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import { useCart } from '@/contexts/cart-context'
 import { trackViewContent } from '@/lib/facebook-pixel'
@@ -107,7 +110,9 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState<string>('')
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  
+  const [customization, setCustomization] = useState('')
+  const [showCustomization, setShowCustomization] = useState(false)
+
   const { addItem } = useCart()
 
   useEffect(() => {
@@ -149,6 +154,8 @@ export default function ProductPage() {
       setSelectedImageIndex(0)
       setSelectedSize('')
       setQuantity(1)
+      setCustomization('')
+      setShowCustomization(false)
     } catch (error) {
       console.error('Error fetching product:', error)
       setError('Failed to load product. Please try again later.')
@@ -202,8 +209,13 @@ export default function ProductPage() {
         size: selectedSize,
         quantity: quantity,
         image: mainImage,
-        maxQuantity: selectedSizeVariant.quantity
+        maxQuantity: selectedSizeVariant.quantity,
+        customization: customization.trim() || undefined
       })
+
+      // Reset customization after adding to cart
+      setCustomization('')
+      setShowCustomization(false)
       
       // Success feedback - the cart dropdown will open automatically
     } catch (error) {
@@ -452,6 +464,59 @@ export default function ProductPage() {
                   {getMaxQuantity()} available
                 </span>
               </div>
+            </div>
+
+            {/* Customization */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setShowCustomization(!showCustomization)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-[#282828]">Add Personalization</span>
+                  {customization && (
+                    <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">Added</span>
+                  )}
+                </div>
+                {showCustomization ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+
+              {showCustomization && (
+                <div className="p-4 bg-white border-t border-gray-200">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Need customization? Add your logo, personalize the product, or request specific modifications.
+                  </p>
+                  <textarea
+                    value={customization}
+                    onChange={(e) => setCustomization(e.target.value)}
+                    placeholder="Describe your customization request... (e.g., 'Add my company logo on the left chest pocket', 'I need only the top part', 'Embroider my name: Dr. Ahmed')"
+                    rows={3}
+                    maxLength={500}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-gray-500">
+                      {customization.length}/500 characters
+                    </p>
+                    {customization && (
+                      <button
+                        onClick={() => setCustomization('')}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-amber-600 mt-2 bg-amber-50 p-2 rounded">
+                    Note: Customized orders may have additional processing time. Our team will contact you to confirm details and pricing.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Add to Cart */}

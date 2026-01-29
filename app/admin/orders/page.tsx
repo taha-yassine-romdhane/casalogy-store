@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Package, Eye, Truck, CheckCircle, Clock, X, User, Phone, MapPin, ShoppingBag, Calendar, Hash, Trash2, Edit, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react'
+import { Package, Eye, Truck, CheckCircle, Clock, X, User, Phone, MapPin, ShoppingBag, Calendar, Hash, Trash2, Edit, AlertTriangle, Download, FileSpreadsheet, Ticket, Pencil } from 'lucide-react'
 
 interface OrderItem {
   id: string
@@ -11,6 +11,7 @@ interface OrderItem {
   price: number | string
   colorName?: string | null
   sizeName?: string | null
+  customization?: string | null
   product: {
     id: string
     name: string
@@ -34,10 +35,12 @@ interface Order {
   orderNumber: string
   subtotal: number | string
   shippingCost: number | string
+  discountAmount?: number | string
   total: number | string
   status: string
   paymentStatus: string
   paymentMethod: string
+  promoCodeUsed?: string | null
   createdAt: string
   user: {
     firstName: string
@@ -318,6 +321,12 @@ export default function OrdersPage() {
                       <div className="text-xs text-gray-500">
                         Subtotal: {formatPrice(order.subtotal)}
                       </div>
+                      {order.promoCodeUsed && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Ticket className="w-3 h-3 text-green-600" />
+                          <span className="text-xs text-green-600 font-mono">{order.promoCodeUsed}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -326,6 +335,12 @@ export default function OrdersPage() {
                           {order.items.reduce((total, item) => total + item.quantity, 0)} items
                         </span>
                       </div>
+                      {order.items.some(item => item.customization) && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Pencil className="w-3 h-3 text-blue-600" />
+                          <span className="text-xs text-blue-600">Has customization</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
@@ -431,6 +446,17 @@ export default function OrdersPage() {
                           <tr key={item.id}>
                             <td className="px-4 py-3">
                               <div className="font-medium text-gray-900">{item.product.name}</div>
+                              {item.customization && (
+                                <div className="mt-2 bg-blue-50 rounded-lg p-2 border border-blue-200">
+                                  <div className="flex items-start gap-1.5">
+                                    <Pencil className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="text-xs font-medium text-blue-700 block">Customization:</span>
+                                      <p className="text-xs text-blue-800 mt-0.5">{item.customization}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <div className="text-sm text-gray-800">
@@ -502,6 +528,20 @@ export default function OrdersPage() {
                       <span>Subtotal:</span>
                       <span>{formatPrice(selectedOrder.subtotal)}</span>
                     </div>
+                    {selectedOrder.discountAmount && parseFloat(selectedOrder.discountAmount.toString()) > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span className="flex items-center gap-1">
+                          <Ticket className="w-4 h-4" />
+                          Discount
+                          {selectedOrder.promoCodeUsed && (
+                            <span className="font-mono text-xs bg-green-100 px-1.5 py-0.5 rounded">
+                              {selectedOrder.promoCodeUsed}
+                            </span>
+                          )}
+                        </span>
+                        <span>-{formatPrice(selectedOrder.discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Shipping:</span>
                       <span>{formatPrice(selectedOrder.shippingCost)}</span>

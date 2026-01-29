@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  ShoppingCart, 
-  Settings, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  ShoppingCart,
+  Settings,
+  LogOut,
   X,
   BarChart3,
   GraduationCap,
@@ -19,6 +19,7 @@ import {
   MessageSquare,
   FileText,
   Globe,
+  Ticket,
 } from 'lucide-react'
 
 const sidebarSections = [
@@ -89,6 +90,11 @@ const sidebarSections = [
         name: 'Orders',
         href: '/admin/orders',
         icon: ShoppingCart
+      },
+      {
+        name: 'Promo Codes',
+        href: '/admin/promo-codes',
+        icon: Ticket
       },
       {
         name: 'Customers',
