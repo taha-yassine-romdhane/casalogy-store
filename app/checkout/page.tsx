@@ -44,7 +44,7 @@ export default function CheckoutPage() {
   })
   const [errors, setErrors] = useState<Partial<CheckoutForm>>({})
 
-  const shippingCost = totalAmount >= 200 ? 0 : 7
+  const shippingCost = totalAmount >= 200 ? 0 : 8
   const finalTotal = totalAmount + shippingCost
 
   const [showSuccess, setShowSuccess] = useState(false)

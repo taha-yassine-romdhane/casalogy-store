@@ -352,24 +352,22 @@ export default function ProductsPage() {
 
   // Handle professional form submission
   const handleProductSubmit = async (data: any) => {
-    try {
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      
-      if (response.ok) {
-        setShowAddModal(false)
-        resetForm()
-        fetchProducts()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to create product')
-      }
-    } catch (error) {
-      console.error('Error creating product:', error)
-      alert('Failed to create product')
+    const response = await fetch('/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+
+    if (response.ok) {
+      setShowAddModal(false)
+      resetForm()
+      fetchProducts()
+    } else {
+      // Throw error with response so form can display it
+      const errorData = await response.json()
+      const error = new Error(errorData.error || 'Failed to create product') as any
+      error.response = { json: () => Promise.resolve(errorData), ...errorData }
+      throw error
     }
   }
 
@@ -391,25 +389,23 @@ export default function ProductsPage() {
 
   const handleProductUpdate = async (data: any) => {
     if (!editingProduct) return
-    
-    try {
-      const response = await fetch(`/api/admin/products/${editingProduct.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      
-      if (response.ok) {
-        setEditingProduct(null)
-        resetForm()
-        fetchProducts()
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to update product')
-      }
-    } catch (error) {
-      console.error('Error updating product:', error)
-      alert('Failed to update product')
+
+    const response = await fetch(`/api/admin/products/${editingProduct.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+
+    if (response.ok) {
+      setEditingProduct(null)
+      resetForm()
+      fetchProducts()
+    } else {
+      // Throw error with response so form can display it
+      const errorData = await response.json()
+      const error = new Error(errorData.error || 'Failed to update product') as any
+      error.response = { json: () => Promise.resolve(errorData), ...errorData }
+      throw error
     }
   }
 

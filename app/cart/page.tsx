@@ -8,7 +8,7 @@ import { Plus, Minus, Trash2, ArrowLeft, ShoppingBag, Truck } from 'lucide-react
 export default function CartPage() {
   const { items, itemCount, totalAmount, updateQuantity, removeItem, clearCart } = useCart()
 
-  const shippingCost = totalAmount >= 200 ? 0 : 15
+  const shippingCost = totalAmount >= 200 ? 0 : 8
   const finalTotal = totalAmount + shippingCost
 
   if (items.length === 0) {

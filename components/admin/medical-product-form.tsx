@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { 
-  X, 
-  Upload, 
-  Check, 
+import {
+  X,
+  Upload,
+  Check,
   Plus,
   Trash2,
   Info,
@@ -25,7 +25,10 @@ import {
   Smile,
   Type,
   AlignLeft,
-  AlignCenter
+  AlignCenter,
+  AlertCircle,
+  AlertTriangle,
+  XCircle
 } from 'lucide-react'
 import { 
   FABRIC_TYPES,
@@ -100,6 +103,18 @@ interface SizeInventory {
   sku: string
 }
 
+interface ValidationError {
+  field: string
+  message: string
+}
+
+interface ApiError {
+  error: string
+  field?: string
+  code?: string
+  details?: string
+}
+
 export function MedicalProductForm({
   categories,
   availableColors,
@@ -116,19 +131,29 @@ export function MedicalProductForm({
   const [description, setDescription] = useState<string>(initialData?.description || '')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [descriptionImages, setDescriptionImages] = useState<Array<{id: string, url: string, file: File}>>([])
+
+  // Error handling state
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [apiError, setApiError] = useState<ApiError | null>(null)
+  const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const fileInputRefs = useRef<Record<string, HTMLInputElement>>({})
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const descriptionImageInputRef = useRef<HTMLInputElement>(null)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
 
+  // Track if initial data has been loaded (to prevent useEffect overwriting inventory)
+  const [isInitialized, setIsInitialized] = useState(false)
+
   // Initialize form data when editing
   useEffect(() => {
-    if (isEdit && initialData) {
+    if (isEdit && initialData && !isInitialized) {
       // Set gender
       if (initialData.gender) {
         setSelectedGender(initialData.gender.toLowerCase())
       }
-      
+
       // Initialize colors and images from database data
       if (initialData.colors && initialData.colors.length > 0) {
         const colors: SelectedColor[] = initialData.colors.map((dbColor: any) => {
@@ -139,7 +164,7 @@ export function MedicalProductForm({
             isMain: dbImage.isMain,
             order: dbImage.sortOrder || index
           })) : []
-          
+
           return {
             id: dbColor.id,
             name: dbColor.colorName,
@@ -148,14 +173,14 @@ export function MedicalProductForm({
             images: images
           }
         })
-        
+
         setSelectedColors(colors)
-        
+
         // Initialize size inventory from variants
         const inventory: Record<string, SizeInventory[]> = {}
         colors.forEach(color => {
           const dbColor = initialData.colors.find((c: any) => c.id === color.id)
-          if (dbColor && dbColor.variants) {
+          if (dbColor && dbColor.variants && dbColor.variants.length > 0) {
             inventory[color.id] = dbColor.variants.map((variant: any) => ({
               sizeId: variant.size.id,
               sizeName: variant.size.name,
@@ -170,7 +195,7 @@ export function MedicalProductForm({
               'men': 'MEN'
             }
             const category = categoryMap[initialData.gender?.toLowerCase() || 'unisex'] || 'UNISEX'
-            
+
             let sizes = availableSizes.filter(size => size.category === category)
             if (category !== 'UNISEX') {
               // Also include UNISEX sizes for gendered products
@@ -185,7 +210,7 @@ export function MedicalProductForm({
                 })
               sizes = Array.from(sizesMap.values())
             }
-            
+
             inventory[color.id] = sizes.map(size => ({
               sizeId: size.id,
               sizeName: size.name,
@@ -194,11 +219,14 @@ export function MedicalProductForm({
             }))
           }
         })
-        
+
         setSizeInventory(inventory)
       }
+
+      // Mark as initialized to prevent re-running
+      setIsInitialized(true)
     }
-  }, [isEdit, initialData, availableSizes])
+  }, [isEdit, initialData, availableSizes, isInitialized])
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -214,12 +242,23 @@ export function MedicalProductForm({
     }
   }, [showEmojiPicker])
 
-  // Update size inventories when gender changes
+  // Update size inventories when gender changes (but NOT during initial load)
+  const [previousGender, setPreviousGender] = useState<string | null>(null)
+
   useEffect(() => {
+    // Skip if this is the initial load or if gender hasn't actually changed
+    if (!isInitialized && isEdit) return
+    if (previousGender === null) {
+      setPreviousGender(selectedGender)
+      return
+    }
+    if (previousGender === selectedGender) return
+
+    // Gender actually changed by user
     if (selectedColors.length > 0) {
       const newSizes = getSizesForGender()
       const newInventory: Record<string, SizeInventory[]> = {}
-      
+
       selectedColors.forEach(color => {
         newInventory[color.id] = newSizes.map(size => {
           // Try to preserve existing quantity if the size already existed
@@ -227,15 +266,17 @@ export function MedicalProductForm({
           return {
             sizeId: size.id,
             sizeName: size.name,
-            quantity: existingSize?.quantity ?? 0, // Default to 0 if no existing quantity
+            quantity: existingSize?.quantity ?? 0,
             sku: existingSize?.sku || ''
           }
         })
       })
-      
+
       setSizeInventory(newInventory)
     }
-  }, [selectedGender, availableSizes]) // Re-run when gender or available sizes change
+
+    setPreviousGender(selectedGender)
+  }, [selectedGender, isInitialized, isEdit]) // Re-run when gender changes
 
   // Get appropriate sizes based on gender selection
   const getSizesForGender = () => {
@@ -662,45 +703,135 @@ export function MedicalProductForm({
     return elements.length > 0 ? elements : [<span key={keyPrefix}>{text}</span>]
   }
 
+  // Validate form data before submission
+  const validateForm = (formData: FormData): ValidationError[] => {
+    const errors: ValidationError[] = []
+
+    // Check product name
+    const name = formData.get('name') as string
+    if (!name || name.trim() === '') {
+      errors.push({ field: 'name', message: 'Product name is required' })
+    }
+
+    // Check price
+    const price = formData.get('price') as string
+    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+      errors.push({ field: 'price', message: 'Valid price is required (must be greater than 0)' })
+    }
+
+    // Check category
+    const categoryId = formData.get('categoryId') as string
+    if (!categoryId || categoryId === '') {
+      errors.push({ field: 'categoryId', message: 'Category is required' })
+    }
+
+    // Check compare price if provided
+    const comparePrice = formData.get('comparePrice') as string
+    if (comparePrice && comparePrice.trim() !== '') {
+      if (isNaN(parseFloat(comparePrice))) {
+        errors.push({ field: 'comparePrice', message: 'Compare price must be a valid number' })
+      } else if (parseFloat(comparePrice) <= parseFloat(price)) {
+        errors.push({ field: 'comparePrice', message: 'Compare price should be higher than the selling price' })
+      }
+    }
+
+    // Check colors
+    if (selectedColors.length === 0) {
+      errors.push({ field: 'colors', message: 'At least one color must be selected' })
+    } else {
+      // Check for colors without images
+      const colorsWithoutImages = selectedColors.filter(c => c.images.length === 0)
+      if (colorsWithoutImages.length > 0) {
+        errors.push({
+          field: 'colors',
+          message: `The following colors need at least one image: ${colorsWithoutImages.map(c => c.name).join(', ')}`
+        })
+      }
+
+      // Check for duplicate colors
+      const colorCodes = selectedColors.map(c => c.hex.toLowerCase())
+      const uniqueColorCodes = new Set(colorCodes)
+      if (colorCodes.length !== uniqueColorCodes.size) {
+        errors.push({ field: 'colors', message: 'Duplicate colors detected. Each color must be unique.' })
+      }
+    }
+
+    // Check inventory (optional warning)
+    let hasInventory = false
+    Object.values(sizeInventory).forEach(sizes => {
+      sizes.forEach(size => {
+        if (size.quantity > 0) hasInventory = true
+      })
+    })
+    if (!hasInventory && selectedColors.length > 0) {
+      // This is just a warning, not an error - but we can add it for informational purposes
+      // errors.push({ field: 'inventory', message: 'Warning: No inventory quantity set for any variant' })
+    }
+
+    return errors
+  }
+
+  // Clear error for specific field
+  const clearFieldError = (field: string) => {
+    setValidationErrors(prev => prev.filter(e => e.field !== field))
+  }
+
+  // Get error message for specific field
+  const getFieldError = (field: string): string | undefined => {
+    return validationErrors.find(e => e.field === field)?.message
+  }
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Reset errors
+    setValidationErrors([])
+    setApiError(null)
+
     const formData = new FormData(e.currentTarget as HTMLFormElement)
-    
+
+    // Validate form
+    const errors = validateForm(formData)
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setShowErrorDialog(true)
+      return
+    }
+
     // Prepare colors data
-    const colorsData = selectedColors.map(color => ({
+    const colorsData = selectedColors.map((color, index) => ({
       colorName: color.name,
       colorCode: color.hex,
-      pantoneCode: color.pantone,
+      pantoneCode: color.pantone || null,
+      sortOrder: index,
       images: color.images
         .sort((a, b) => a.order - b.order)
         .map(img => ({
-          url: img.url, // Now using uploaded URLs
+          url: img.url,
           isMain: img.isMain,
           order: img.order
         }))
     }))
-    
-    // Prepare variants data
+
+    // Prepare variants data - create variants for ALL size/color combinations
     const variantsData: any[] = []
     Object.entries(sizeInventory).forEach(([colorId, sizes]) => {
       const color = selectedColors.find(c => c.id === colorId)
       if (color) {
         sizes.forEach(sizeData => {
-          if (sizeData.quantity > 0 || sizeData.sku) {
-            variantsData.push({
-              colorId: color.id,
-              colorName: color.name,
-              sizeId: sizeData.sizeId,
-              sizeName: sizeData.sizeName,
-              quantity: sizeData.quantity,
-              sku: sizeData.sku || generateSKU(formData.get('sku') as string, colorId, sizeData.sizeName)
-            })
-          }
+          variantsData.push({
+            colorId: color.id,
+            colorName: color.name,
+            sizeId: sizeData.sizeId,
+            sizeName: sizeData.sizeName,
+            quantity: sizeData.quantity || 0,
+            sku: sizeData.sku || '' // Backend will generate unique SKU
+          })
         })
       }
     })
-    
+
     const data = {
       // Basic info
       name: formData.get('name'),
@@ -710,32 +841,69 @@ export function MedicalProductForm({
       price: parseFloat(formData.get('price') as string),
       comparePrice: formData.get('comparePrice') ? parseFloat(formData.get('comparePrice') as string) : null,
       categoryId: formData.get('categoryId'),
-      
+
       // Product-specific attributes
       fabricType: formData.get('fabricType'),
       gender: selectedGender,
       pocketCount: formData.get('pocketCount') ? parseInt(formData.get('pocketCount') as string) : null,
-      
+
       // Status
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
-      
+
       // SEO
       metaTitle: formData.get('metaTitle'),
       metaDescription: formData.get('metaDescription'),
-      
+
       // Relations
       colors: colorsData,
       variants: variantsData,
-      
+
       // Description with images
       descriptionImages: descriptionImages.map(img => ({
         file: img.file,
         url: img.url
       }))
     }
-    
-    await onSubmit(data)
+
+    setIsSubmitting(true)
+
+    try {
+      await onSubmit(data)
+    } catch (error: any) {
+      console.error('Form submission error:', error)
+
+      // Handle API error response
+      let errorInfo: ApiError = {
+        error: 'An unexpected error occurred',
+        details: 'Please try again or contact support if the problem persists.'
+      }
+
+      if (error.response) {
+        // Error has response data attached
+        const errorData = error.response.error ? error.response : (
+          typeof error.response.json === 'function'
+            ? await error.response.json().catch(() => ({}))
+            : error.response
+        )
+        errorInfo = {
+          error: errorData.error || error.message || 'An error occurred while saving the product',
+          field: errorData.field,
+          code: errorData.code,
+          details: errorData.details
+        }
+      } else if (error.message) {
+        errorInfo = {
+          error: error.message,
+          details: 'Please check your connection and try again.'
+        }
+      }
+
+      setApiError(errorInfo)
+      setShowErrorDialog(true)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -751,6 +919,134 @@ export function MedicalProductForm({
           <X className="w-6 h-6" />
         </button>
       </div>
+
+      {/* Error Dialog */}
+      {showErrorDialog && (validationErrors.length > 0 || apiError) && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden">
+            {/* Dialog Header */}
+            <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-red-800">
+                    {validationErrors.length > 0 ? 'Validation Error' : 'Error Saving Product'}
+                  </h3>
+                  <p className="text-sm text-red-600">
+                    {validationErrors.length > 0
+                      ? `${validationErrors.length} issue${validationErrors.length > 1 ? 's' : ''} found`
+                      : 'Please review the error below'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowErrorDialog(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Dialog Content */}
+            <div className="px-6 py-4 max-h-[50vh] overflow-y-auto">
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="space-y-3">
+                  {validationErrors.map((error, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg"
+                    >
+                      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-red-800 capitalize">
+                          {error.field.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        <p className="text-sm text-red-600">{error.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* API Error */}
+              {apiError && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-800">{apiError.error}</p>
+                      {apiError.field && (
+                        <p className="text-sm text-red-600 mt-1">
+                          Field: <span className="font-medium capitalize">{apiError.field}</span>
+                        </p>
+                      )}
+                      {apiError.code && (
+                        <p className="text-xs text-red-500 mt-1">
+                          Error Code: {apiError.code}
+                        </p>
+                      )}
+                      {apiError.details && (
+                        <p className="text-sm text-gray-600 mt-2 p-2 bg-white rounded border">
+                          {apiError.details}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Suggestions based on error code */}
+                  {apiError.code === 'DUPLICATE' && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Suggestion:</strong> Try using a different value for the {apiError.field || 'field'}.
+                        If this is a SKU, you can leave it empty to auto-generate a unique one.
+                      </p>
+                    </div>
+                  )}
+                  {apiError.code === 'INVALID_REFERENCE' && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Suggestion:</strong> Make sure the selected category exists and all sizes are valid.
+                        Try refreshing the page to reload the available options.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Dialog Footer */}
+            <div className="bg-gray-50 border-t px-6 py-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowErrorDialog(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+              {validationErrors.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowErrorDialog(false)
+                    // Focus on first error field
+                    const firstError = validationErrors[0]
+                    const element = document.querySelector(`[name="${firstError.field}"]`) as HTMLElement
+                    element?.focus()
+                    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Go to First Error
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information */}
@@ -770,9 +1066,15 @@ export function MedicalProductForm({
                 name="name"
                 required
                 defaultValue={initialData?.name}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={() => clearFieldError('name')}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  getFieldError('name') ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="e.g., Professional Scrub Top"
               />
+              {getFieldError('name') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('name')}</p>
+              )}
             </div>
             
             <div>
@@ -1026,9 +1328,15 @@ Perfect for healthcare professionals! 🏥⚕️"
                 step="0.01"
                 min="0"
                 defaultValue={initialData?.price}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={() => clearFieldError('price')}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  getFieldError('price') ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="0.00"
               />
+              {getFieldError('price') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('price')}</p>
+              )}
             </div>
             
             <div>
@@ -1041,10 +1349,16 @@ Perfect for healthcare professionals! 🏥⚕️"
                 step="0.01"
                 min="0"
                 defaultValue={initialData?.comparePrice}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={() => clearFieldError('comparePrice')}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  getFieldError('comparePrice') ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="0.00"
               />
               <p className="text-xs text-gray-500 mt-1">Original price before discount</p>
+              {getFieldError('comparePrice') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('comparePrice')}</p>
+              )}
             </div>
 
             <div>
@@ -1055,7 +1369,10 @@ Perfect for healthcare professionals! 🏥⚕️"
                 name="categoryId"
                 required
                 defaultValue={initialData?.categoryId || ''}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={() => clearFieldError('categoryId')}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  getFieldError('categoryId') ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
               >
                 <option value="">Select category</option>
                 {categories.map((category) => (
@@ -1064,6 +1381,9 @@ Perfect for healthcare professionals! 🏥⚕️"
                   </option>
                 ))}
               </select>
+              {getFieldError('categoryId') && (
+                <p className="text-xs text-red-600 mt-1">{getFieldError('categoryId')}</p>
+              )}
             </div>
 
             <div>
@@ -1129,16 +1449,27 @@ Perfect for healthcare professionals! 🏥⚕️"
         </div>
 
         {/* Color Selection */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className={`bg-white border rounded-lg p-6 ${
+          getFieldError('colors') ? 'border-red-300 bg-red-50/30' : 'border-gray-200'
+        }`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <Palette className="w-5 h-5 mr-2 text-purple-600" />
+              <Palette className={`w-5 h-5 mr-2 ${getFieldError('colors') ? 'text-red-500' : 'text-purple-600'}`} />
               <h4 className="text-lg font-semibold text-gray-900">Available Colors</h4>
+              {getFieldError('colors') && (
+                <span className="ml-2 text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded">Required</span>
+              )}
             </div>
             <span className="text-sm text-gray-500">
               {selectedColors.length} color{selectedColors.length !== 1 ? 's' : ''} selected
             </span>
           </div>
+          {getFieldError('colors') && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{getFieldError('colors')}</p>
+            </div>
+          )}
           
           <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-10 xl:grid-cols-12 gap-3">
             {availableColors.map(color => {
@@ -1447,17 +1778,53 @@ Perfect for healthcare professionals! 🏥⚕️"
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isSubmitting}
+            className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isEdit ? 'Update Product' : 'Create Product'}
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {isEdit ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              isEdit ? 'Update Product' : 'Create Product'
+            )}
           </button>
         </div>
+
+        {/* Validation Summary (shown inline) */}
+        {validationErrors.length > 0 && !showErrorDialog && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <p className="text-sm font-medium text-red-800">Please fix the following issues:</p>
+            </div>
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index} className="text-sm text-red-700">
+                  <span className="font-medium capitalize">{error.field.replace(/([A-Z])/g, ' $1').trim()}:</span> {error.message}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => setShowErrorDialog(true)}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            >
+              View details
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

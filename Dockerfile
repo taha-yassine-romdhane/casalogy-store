@@ -11,6 +11,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
+# Install sharp for Alpine Linux (musl)
+RUN npm install --os=linux --libc=musl --cpu=x64 sharp
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
@@ -44,6 +47,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
+
+# Copy sharp module for image optimization
+COPY --from=deps /app/node_modules/sharp ./node_modules/sharp
+COPY --from=deps /app/node_modules/@img ./node_modules/@img
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/

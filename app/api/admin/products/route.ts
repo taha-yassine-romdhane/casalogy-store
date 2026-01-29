@@ -150,11 +150,54 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
-    if (!name || !price || !categoryId) {
+    if (!name || name.trim() === '') {
       return NextResponse.json(
-        { error: 'Name, price, and category are required' },
+        { error: 'Product name is required', field: 'name' },
         { status: 400 }
       )
+    }
+
+    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+      return NextResponse.json(
+        { error: 'Valid price is required', field: 'price' },
+        { status: 400 }
+      )
+    }
+
+    if (!categoryId || categoryId.trim() === '') {
+      return NextResponse.json(
+        { error: 'Category is required', field: 'categoryId' },
+        { status: 400 }
+      )
+    }
+
+    // Validate colors have required data
+    if (colors && colors.length > 0) {
+      for (let i = 0; i < colors.length; i++) {
+        const color = colors[i]
+        if (!color.colorName || color.colorName.trim() === '') {
+          return NextResponse.json(
+            { error: `Color ${i + 1} is missing a name`, field: 'colors' },
+            { status: 400 }
+          )
+        }
+        if (!color.colorCode || color.colorCode.trim() === '') {
+          return NextResponse.json(
+            { error: `Color "${color.colorName}" is missing a color code`, field: 'colors' },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Check for duplicate color codes
+      const colorCodes = colors.map((c: any) => c.colorCode.toLowerCase())
+      const uniqueColorCodes = new Set(colorCodes)
+      if (colorCodes.length !== uniqueColorCodes.size) {
+        return NextResponse.json(
+          { error: 'Duplicate colors detected. Each color must be unique.', field: 'colors' },
+          { status: 400 }
+        )
+      }
     }
 
     // Generate SKU if not provided
@@ -298,8 +341,30 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(completeProduct, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating product:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+
+    // Handle specific Prisma errors
+    if (error.code === 'P2002') {
+      // Unique constraint violation
+      const field = error.meta?.target?.[0] || 'field'
+      return NextResponse.json(
+        { error: `A product with this ${field} already exists`, field, code: 'DUPLICATE' },
+        { status: 400 }
+      )
+    }
+
+    if (error.code === 'P2003') {
+      // Foreign key constraint violation
+      return NextResponse.json(
+        { error: 'Invalid reference: Category or Size does not exist', code: 'INVALID_REFERENCE' },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to create product. Please try again.', details: error.message },
+      { status: 500 }
+    )
   }
 }
