@@ -105,7 +105,7 @@ export default function FeaturedCategories() {
                     <Package className="w-16 h-16 text-indigo-300 group-hover:text-indigo-400 transition-colors" />
                   </div>
                 )}
-                <div className=\"absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300\"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               
               <div className="p-6">

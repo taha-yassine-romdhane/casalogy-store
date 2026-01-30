@@ -5,6 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Heart, Filter, Grid3X3, List, Star, ShoppingCart, Shirt, Stethoscope, Thermometer, Cloud, Footprints, Package, Loader2, Play, Users } from 'lucide-react'
 
+interface ProductColor {
+  name: string
+  code: string
+}
+
 interface Product {
   id: string
   name: string
@@ -15,7 +20,7 @@ interface Product {
   comparePrice?: number
   rating: number
   reviews: number
-  colors: string[]
+  colors: ProductColor[]
   sizes: string[]
   mainImage?: string | null
   isNew?: boolean
@@ -111,11 +116,11 @@ export default function WomenPage() {
     }
   }
 
-  const allColors = [...new Set(products.flatMap(product => product.colors))]
+  const allColors = [...new Map(products.flatMap(product => product.colors).map(c => [c.name, c])).values()]
   const allSizes = [...new Set(products.flatMap(product => product.sizes))]
 
   const filteredProducts = products.filter(product => {
-    const colorMatch = !filterColor || product.colors.includes(filterColor)
+    const colorMatch = !filterColor || product.colors.some(c => c.name === filterColor)
     const sizeMatch = !filterSize || product.sizes.includes(filterSize)
     return colorMatch && sizeMatch
   })
@@ -386,7 +391,7 @@ export default function WomenPage() {
                 >
                   <option value="">All Colors</option>
                   {allColors.map(color => (
-                    <option key={color} value={color}>{color}</option>
+                    <option key={color.name} value={color.name}>{color.name}</option>
                   ))}
                 </select>
 
@@ -530,28 +535,8 @@ export default function WomenPage() {
                         <div
                           key={index}
                           className={`rounded-full border border-gray-300 ${viewMode === 'list' ? 'w-3 h-3' : 'w-4 h-4'}`}
-                          style={{
-                            backgroundColor: color === 'White' ? '#fff' : 
-                                           color === 'Black' ? '#000' :
-                                           color === 'Navy' ? '#1e3a8a' :
-                                           color === 'Pink' ? '#f9a8d4' :
-                                           color === 'Light Pink' ? '#fce7f3' :
-                                           color === 'Teal' ? '#14b8a6' :
-                                           color === 'Purple' ? '#a855f7' :
-                                           color === 'Gray' ? '#6b7280' :
-                                           color === 'Charcoal' ? '#4b5563' :
-                                           color === 'Wine' ? '#7c2d12' :
-                                           color === 'Light Blue' ? '#93c5fd' :
-                                           color === 'Mint' ? '#86efac' :
-                                           color === 'Cream' ? '#fef7cd' :
-                                           color === 'Rose Gold' ? '#f97316' :
-                                           color === 'Silver' ? '#d1d5db' :
-                                           color === 'Gold' ? '#fbbf24' :
-                                           color === 'Coral' ? '#fb7185' :
-                                           color === 'Lavender' ? '#c4b5fd' :
-                                           color === 'Nude' ? '#f3e8ff' :
-                                           color.includes('Floral') ? '#f9a8d4' : '#6b7280'
-                          }}
+                          style={{ backgroundColor: color.code }}
+                          title={color.name}
                         />
                       ))}
                       {product.colors.length > (viewMode === 'list' ? 3 : 4) && (

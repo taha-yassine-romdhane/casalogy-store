@@ -69,8 +69,11 @@ export async function GET(request: NextRequest) {
         ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
         : 0
 
-      // Get unique colors and sizes
-      const colors = product.colors.map(pc => pc.colorName)
+      // Get unique colors with their codes
+      const colors = product.colors.map(pc => ({
+        name: pc.colorName,
+        code: pc.colorCode
+      }))
       const sizes = [...new Set(product.variants.map(v => v.size.name))]
 
       // Get main image URL
