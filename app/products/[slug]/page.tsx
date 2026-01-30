@@ -393,19 +393,19 @@ export default function ProductPage() {
               <h3 className="font-semibold text-[#282828] mb-3">
                 Color: {currentColorVariant?.colorName}
               </h3>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {product.colorVariants.map((colorVariant, index) => (
                   <button
                     key={colorVariant.id}
                     onClick={() => handleColorChange(index)}
-                    className={`w-12 h-12 rounded-full border-2 transition-colors ${
-                      selectedColorIndex === index ? 'border-blue-600' : 'border-gray-300 hover:border-gray-400'
+                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-colors flex-shrink-0 ${
+                      selectedColorIndex === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-300 hover:border-gray-400'
                     }`}
                     style={{ backgroundColor: colorVariant.colorCode }}
                     title={colorVariant.colorName}
                   >
                     {selectedColorIndex === index && (
-                      <Check className="w-6 h-6 text-white mx-auto" />
+                      <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white mx-auto" />
                     )}
                   </button>
                 ))}
